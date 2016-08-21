@@ -9,4 +9,4 @@ of a small scale business specially owened by an individual
 1) Stock
 2) Purchase & Sale information
 3) Profit & Loss information 
-4) Cash infrow/outflow information
+4) Cash inflow/outflow information
