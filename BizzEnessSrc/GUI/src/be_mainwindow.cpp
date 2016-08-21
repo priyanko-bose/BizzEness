@@ -462,11 +462,11 @@ void BE_MainWindow::on_exportAllDataPushButton_clicked()
 void BE_MainWindow::on_exportTablePushButton_clicked()
 {
     QPrinter printer;
-    QPainter painter;
     printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setOrientation(QPrinter::Landscape);
     printer.setPaperSize(QPrinter::A4);
     printer.setOutputFileName(QString(table_name[curTableId]) + ".pdf");
+    QPainter painter(&printer);
     QString tableName(table_name[curTableId]);
     tableName = tableName + " Table:-";
     exportToPdf(&printer, &painter, curTable, tableName);
@@ -530,8 +530,6 @@ void BE_MainWindow::print(QPrinter *printer)
     QString tableName(table_name[curTableId]);
     tableName = tableName + " Table:-";
     exportToPdf(printer, &painter, curTable, tableName);
-    //painter.drawText(100, 100, "Hello World! 123");
-
 }
 void BE_MainWindow::on_previewPushButton_clicked()
 {
@@ -553,7 +551,6 @@ void BE_MainWindow::on_printTablePushButton_clicked()
     printer.setOrientation(QPrinter::Landscape);
     QPrintDialog   dialog( &printer, this );
     if ( dialog.exec() == QDialog::Accepted ) this->print( &printer );
-
 }
 
 /*

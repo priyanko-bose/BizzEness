@@ -78,9 +78,6 @@ void adjustPainterScale(QPainter *painter, QPrinter *printer, int width, int hei
 
 void exportToPdf(QPrinter *printer, QPainter *painter, QTableWidget *curTable, QString tableName){
 
-    //Declare & Initialize painter object
-    //QPainter painter(printer);
-
     //Initialize variables to select the portion of Table Widget
     int count = 0;
     int columns = curTable->columnCount();
