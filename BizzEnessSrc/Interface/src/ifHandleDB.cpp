@@ -119,7 +119,7 @@ errorType saveTableRecords(tableType type)
         errorCode |= beMangObj->getPurchaseManager()->readBMData(&records, &totItems);
         for(int iter=0; iter < totItems; iter++){
             fout << records->at(iter).at(0);
-            errorCode |= beDbObj->purTableHandler->editIntoDataBase(stoul(records->at(iter).at(0)) , &records->at(iter));
+            errorCode |= beDbObj->purTableHandler->editIntoDataBase(atol(records->at(iter).at(0).c_str()) , &records->at(iter));
         }
     }
     totItems = 0;

@@ -107,7 +107,7 @@ errorType importTableData(string path)
     errorCode |= beMangObj->getPurchaseManager()->readBMData(&records, &totItems);
     for(int iter=0; iter < totItems; iter++){
         fout << records->at(iter).at(0);
-        errorCode |= beDbObj->purTableHandler->addIntoDataBase(stoul(records->at(iter).at(0)) , &records->at(iter));
+        errorCode |= beDbObj->purTableHandler->addIntoDataBase(atol(records->at(iter).at(0).c_str()) , &records->at(iter));
     }
     totItems = 0;
     delete records;
