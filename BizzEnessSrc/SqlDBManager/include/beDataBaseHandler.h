@@ -16,15 +16,12 @@ class BE_DatabaseHandler
         errorType initDB();
         void deInitDB();
 
-        virtual errorType readDataBase(matrix *, int *);
-        virtual errorType addIntoDataBase(unsigned int ,matrow *);
-        virtual errorType deleteFromDataBase(unsigned int );
-        virtual errorType editIntoDataBase(unsigned int ,matrow *);
-        virtual errorType editFieldIntoDataBase(unsigned int , string *, string *);
-        virtual errorType deleteAllTableEntries();
-
-        BE_DatabaseHandler *purTableHandler;
-        //BE_DatabaseHandler *stockTableHandler;
+        errorType readDataBase(tableType, int , int , matrix *, int *);
+        errorType addIntoDataBase(tableType tbl, int , int ,unsigned int ,matrow *);
+        errorType deleteFromDataBase(tableType, unsigned int );
+        errorType editIntoDataBase(tableType, int , int ,unsigned int ,matrow *);
+        errorType editFieldIntoDataBase(tableType, unsigned int , string *, string *);
+        errorType deleteAllTableEntries(tableType);
 
     protected:
         BE_DatabaseHandler();

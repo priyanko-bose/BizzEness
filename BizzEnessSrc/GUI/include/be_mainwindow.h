@@ -44,7 +44,7 @@ public:
     int setCurrentTab(QString & );
 
 private slots:
-
+    void print(QPrinter *printer);
 
 private:
     BE_MainWindow(QWidget *parent = 0);
@@ -54,7 +54,7 @@ private:
     int curTableId;
     void saveTableItems(QTableWidget *);
     void cancelTableItems(QTableWidget *);
-    void print(QPrinter *printer);
+
 
     void on_addPushButton_clicked();
     void on_delPushButton_clicked();

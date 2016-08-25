@@ -534,7 +534,6 @@ void BE_MainWindow::print(QPrinter *printer)
 void BE_MainWindow::on_previewPushButton_clicked()
 {
     QPrinter printer;
-    printer.setResolution(QPrinter::HighResolution);
     printer.setPaperSize(QPrinter::A4);
     printer.setOrientation(QPrinter::Landscape);
     QPrintPreviewDialog preview(&printer, this);
