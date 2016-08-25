@@ -46,7 +46,7 @@ errorType readRecords()
     int totItems = 0;
     matrix records;
     int errorCode = ERR_NONE;
-    errorCode |= beDbObj->purTableHandler->readDataBase(&records, &totItems);
+    errorCode |= beDbObj->readDataBase(TABLE_PURCHASE, PUR_ID, PUR_END, &records, &totItems);
     for(int iter=0; iter < totItems; iter++)
         errorCode |= beMangObj->getPurchaseManager()->insertSavedItem(&records.at(iter));
     records.clear();
@@ -119,7 +119,8 @@ errorType saveTableRecords(tableType type)
         errorCode |= beMangObj->getPurchaseManager()->readBMData(&records, &totItems);
         for(int iter=0; iter < totItems; iter++){
             fout << records->at(iter).at(0);
-            errorCode |= beDbObj->purTableHandler->editIntoDataBase(atol(records->at(iter).at(0).c_str()) , &records->at(iter));
+            errorCode |= beDbObj->editIntoDataBase(type, PUR_ID, PUR_END,
+                                                   atol(records->at(iter).at(0).c_str()) , &records->at(iter));
         }
     }
     totItems = 0;
@@ -141,7 +142,7 @@ errorType saveRecordInDB(tableType tbl, unsigned int id, matrow *record)
     BE_DatabaseHandler *beDbObj = BE_DatabaseHandler::getDataBaseHandlerInstance();
     switch(tbl){
         case TABLE_PURCHASE:
-            errorCode = beDbObj->purTableHandler->addIntoDataBase(id, record);
+            errorCode = beDbObj->addIntoDataBase(TABLE_PURCHASE, PUR_ID, PUR_END, id, record);
             break;
         default:
             break;
@@ -158,7 +159,7 @@ errorType delFromDataBase(tableType tbl, unsigned int id)
     BE_DatabaseHandler *beDbObj = BE_DatabaseHandler::getDataBaseHandlerInstance();
     switch(tbl){
         case TABLE_PURCHASE:
-            errorCode = beDbObj->purTableHandler->deleteFromDataBase(id);
+            errorCode = beDbObj->deleteFromDataBase(TABLE_PURCHASE, id);
             break;
         default:
             break;

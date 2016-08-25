@@ -87,33 +87,43 @@ errorType importTableData(string path)
     int errorCode = 0;
     BE_DatabaseHandler *beDbObj = BE_DatabaseHandler::getDataBaseHandlerInstance();
     BE_BusinessManager *beMangObj = BE_BusinessManager::getInstance();
-
-    //Restore Purchase data from all places --start
-    errorCode |= beDbObj->purTableHandler->deleteAllTableEntries();
-    errorCode |= beMangObj->getPurchaseManager()->deleteAllItems();
-    int noOfItems = 0;
-    errorCode |= beMangObj->getPurchaseManager()->readFileData(path, &noOfItems);
-    beMangObj->isPurchaseDataRead = true;
-    beMangObj->getPurchaseManager()->totItems = noOfItems;
     BE_MainWindow *w = BE_MainWindow :: getBeMainWindow();
-    int rowCount = w->getPurchaseTable()->rowCount();
-    for(int it = 0; it < rowCount; it++)
-        w->getPurchaseTable()->removeRow(0);
-    errorCode |= populateSavedData();
 
-    int totItems = 0;
-    matrix *records = 0;
-    fout<<"info:ifHandleGUI.cpp:importTableData:saving data into Purchase database"<<endl;
-    errorCode |= beMangObj->getPurchaseManager()->readBMData(&records, &totItems);
-    for(int iter=0; iter < totItems; iter++){
-        fout << records->at(iter).at(0);
-        errorCode |= beDbObj->purTableHandler->addIntoDataBase(atol(records->at(iter).at(0).c_str()) , &records->at(iter));
+    //Restore All Table data from all places --start
+    for(int tbl = TABLE_NONE + 1; tbl < TABLE_END; tbl++  ){
+        int noOfItems = 0;
+        int totItems = 0;
+        int rowCount = 0;
+        matrix *records = 0;
+        switch(tbl){
+            case TABLE_PURCHASE:
+                fout<<"info:ifHandleGUI.cpp:importTableData:Purchase database"<<endl;
+                errorCode |= beDbObj->deleteAllTableEntries(TABLE_PURCHASE);
+                errorCode |= beMangObj->getPurchaseManager()->deleteAllItems();
+                errorCode |= beMangObj->getPurchaseManager()->readFileData(path, &noOfItems);
+                beMangObj->isPurchaseDataRead = true;
+                beMangObj->getPurchaseManager()->totItems = noOfItems;
+                errorCode |= beMangObj->getPurchaseManager()->readBMData(&records, &totItems);
+
+                for(int iter=0; iter < totItems; iter++){
+                    fout << records->at(iter).at(0);
+                        errorCode |= beDbObj->addIntoDataBase((tableType)tbl, PUR_ID, PUR_END,
+                                atol(records->at(iter).at(0).c_str()) , &records->at(iter));
+                }
+                rowCount = w->getPurchaseTable()->rowCount();
+                for(int it = 0; it < rowCount; it++)
+                    w->getPurchaseTable()->removeRow(0);
+                break;
+            default:
+                break;
+        }
+        totItems = 0;
+        if(records)
+            delete records;
+        records = '\0';
     }
-    totItems = 0;
-    delete records;
-    records = '\0';
-    //Restore Purchase data from all places -- end
-
+    //Restore Table data from all places -- end
+    errorCode |= populateSavedData();
     return (errorType)errorCode;
 }
 

@@ -25,7 +25,6 @@ SOURCES +=\
     BusinessManager/src/bePLManager.cpp \
     GUI/src/be_purwindow.cpp \
     SqlDBManager/src/beDataBaseHandler.cpp \
-    SqlDBManager/src/bePurTableHandler.cpp \
     Interface/src/ifHandleBM.cpp \
     Interface/src/ifHandleGUI.cpp \
     SqlDBManager/src/beDBUtils.cpp \
@@ -46,7 +45,6 @@ HEADERS  +=\
     BusinessManager/include/beSummaryManager.h \
     GUI/include/be_purwindow.h \
     SqlDBManager/include/beDataBaseHandler.h \
-    SqlDBManager/include/bePurTableHandler.h \
     Interface/include/ifHandleGUI.h \
     Interface/include/ifHandleBM.h \
     SqlDBManager/include/beDBUtils.h \
