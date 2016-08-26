@@ -268,6 +268,10 @@ errorType prepareRecord(tableType tbl, unsigned int id, matrow **record)
             *record = new matrow();
             err = beMangObj->getPurchaseManager()->getRecord(id,*record);
             break;
+        case TABLE_STOCK:
+            *record = new matrow();
+            err = beMangObj->getStockManager()->getRecord(id,*record);
+            break;
         default:
             break;
     }

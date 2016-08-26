@@ -114,6 +114,24 @@ errorType importTableData(string path)
                 for(int it = 0; it < rowCount; it++)
                     w->getPurchaseTable()->removeRow(0);
                 break;
+            case TABLE_STOCK:
+                fout<<"info:ifHandleGUI.cpp:importTableData:Stock database"<<endl;
+                errorCode |= beDbObj->deleteAllTableEntries(TABLE_STOCK);
+                errorCode |= beMangObj->getStockManager()->deleteAllItems();
+                errorCode |= beMangObj->getStockManager()->readFileData(path, &noOfItems);
+                beMangObj->isStockDataRead = true;
+                beMangObj->getStockManager()->totItems = noOfItems;
+                errorCode |= beMangObj->getStockManager()->readBMData(&records, &totItems);
+
+                for(int iter=0; iter < totItems; iter++){
+                    fout << records->at(iter).at(0);
+                        errorCode |= beDbObj->addIntoDataBase((tableType)tbl, PROD_ID, PROD_END,
+                                atol(records->at(iter).at(0).c_str()) , &records->at(iter));
+                }
+                rowCount = w->getStockTable()->rowCount();
+                for(int it = 0; it < rowCount; it++)
+                    w->getStockTable()->removeRow(0);
+                break;
             default:
                 break;
         }
@@ -132,9 +150,9 @@ errorType importTableData(string path)
  */
 errorType populateSavedData()
 {
-    BE_BusinessManager *beBusinessMgr = 0;
-    beBusinessMgr = BE_BusinessManager::getInstance();
-    if(!beBusinessMgr)
+    BE_BusinessManager *beBussinessMgr = 0;
+    beBussinessMgr = BE_BusinessManager::getInstance();
+    if(!beBussinessMgr)
     {
         fout << "error("<< ERR_BMANAGER_INIT<<"):ifHandleDB.cpp:populateSavedData:Couldn't get backend object" <<endl;
         return ERR_BMANAGER_INIT;
@@ -147,16 +165,15 @@ errorType populateSavedData()
         return ERR_UI_INIT;
     }
 
-    if(beBusinessMgr->isStockDataRead)
+    if(beBussinessMgr->isStockDataRead)
     {
         QTableWidget *stockTable = w->getStockTable();
-        map <int, stockData_t> & table = beBusinessMgr->getStockManager()->getStockTable();
-        int rowCount = beBusinessMgr->getStockManager()->totItems;
+        BE_StockManager *stockMgr = beBussinessMgr->getStockManager();
+        map <unsigned int, stockData_t> & table = stockMgr->getStockTable();
+        int rowCount = stockMgr->totItems;
         int row = 0;
-        for(map<int,stockData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
+        for(map<unsigned int,stockData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
         {
-            if(it->first > w->startProdId )
-                w->startProdId = it->first;
             stockTable->insertRow(row);
             for(int col=PROD_ID; col < PROD_END; col++)
             {
@@ -164,9 +181,11 @@ errorType populateSavedData()
                 {
                     QTableWidgetItem *item = new QTableWidgetItem();
                     char data[256] = {'\0',};
-                    strcpy(data,beBusinessMgr->getStockManager()->getElement(it->second, col));
+                    strcpy(data, stockMgr->getElement(it->second, col));
                     item->setText(data);
                     item->setToolTip(data);
+                    if(!isAdmin || col == PROD_ID)
+                            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
                     stockTable->setItem(row,col,item);
                 }
             }
@@ -176,10 +195,10 @@ errorType populateSavedData()
     else
         fout <<"info:ifHandleDB.cpp:populateSavedData:no stock data populated" << endl;
 
-    if(beBusinessMgr->isPurchaseDataRead)
+    if(beBussinessMgr->isPurchaseDataRead)
     {
         QTableWidget *purchaseTable = w->getPurchaseTable();
-        BE_PurchaseManager *purMgr = beBusinessMgr->getPurchaseManager();
+        BE_PurchaseManager *purMgr = beBussinessMgr->getPurchaseManager();
         map <unsigned int, purchaseData_t> & table = purMgr->getPurchaseTable();
         int rowCount = purMgr->totItems;
         int row = 0;
@@ -206,16 +225,15 @@ errorType populateSavedData()
     else
         fout <<"info:ifHandleDB.cpp:populateSavedData:no purchase data populated" << endl;
 
-    if(beBusinessMgr->isSalesDataRead)
+    if(beBussinessMgr->isSalesDataRead)
     {
         QTableWidget *salesTable = w->getSalesTable();
-        map <int, salesData_t> & table = beBusinessMgr->getSalesManager()->getSalesTable();
-        int rowCount = beBusinessMgr->getSalesManager()->totItems;
+        BE_SalesManager *saleMgr = beBussinessMgr->getSalesManager();
+        map <int, salesData_t> & table = saleMgr->getSalesTable();
+        int rowCount = saleMgr->totItems;
         int row = 0;
         for(map<int,salesData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
         {
-            if(it->first > w->startSalesId )
-                w->startSalesId = it->first;
             salesTable->insertRow(row);
             for(int col=SALES_ID; col < SALES_END; col++)
             {
@@ -223,9 +241,11 @@ errorType populateSavedData()
                 {
                     QTableWidgetItem *item = new QTableWidgetItem();
                     char data[256] = {'\0',};
-                    strcpy(data,beBusinessMgr->getSalesManager()->getElement(it->second, col));
+                    strcpy(data,saleMgr->getElement(it->second, col));
                     item->setText(data);
                     item->setToolTip(data);
+                    if(!isAdmin || col == SALES_ID)
+                            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
                     salesTable->setItem(row,col,item);
                 }
             }
@@ -235,16 +255,15 @@ errorType populateSavedData()
     else
         fout <<"info:ifHandleDB.cpp:populateSavedData:no sales data populated" << endl;
 
-    if(beBusinessMgr->isPLDataRead)
+    if(beBussinessMgr->isPLDataRead)
     {
         QTableWidget *plTable = w->getPLTable();
-        map <int, plData_t> & table = beBusinessMgr->getPLManager()->getPLTable();
-        int rowCount = beBusinessMgr->getPLManager()->totItems;
+        BE_PLManager *plMgr = beBussinessMgr->getPLManager();
+        map <int, plData_t> & table = plMgr->getPLTable();
+        int rowCount = plMgr->totItems;
         int row = 0;
         for(map<int,plData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
         {
-            if(it->first > w->startPLId )
-                w->startPLId = it->first;
             plTable->insertRow(row);
             for(int col=PL_ID; col < PL_END; col++)
             {
@@ -252,9 +271,11 @@ errorType populateSavedData()
                 {
                     QTableWidgetItem *item = new QTableWidgetItem();
                     char data[256] = {'\0',};
-                    strcpy(data,beBusinessMgr->getPLManager()->getElement(it->second, col));
+                    strcpy(data,plMgr->getElement(it->second, col));
                     item->setText(data);
                     item->setToolTip(data);
+                    if(!isAdmin || col == PL_ID)
+                            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
                     plTable->setItem(row,col,item);
                 }
             }
@@ -263,16 +284,15 @@ errorType populateSavedData()
     }
     else
         fout <<"info:ifHandleDB.cpp:populateSavedData:no Profit&Loss data populated" << endl;
-    if(beBusinessMgr->isCashFlowDataRead)
+    if(beBussinessMgr->isCashFlowDataRead)
     {
         QTableWidget *cashFlowTable = w->getCashFlowTable();
-        map <int, cashflowData_t> & table = beBusinessMgr->getCashflowManager()->getCashflowTable();
-        int rowCount = beBusinessMgr->getCashflowManager()->totItems;
+        BE_CashflowManager *cflwMgr = beBussinessMgr->getCashflowManager();
+        map <int, cashflowData_t> & table = cflwMgr->getCashflowTable();
+        int rowCount = cflwMgr->totItems;
         int row = 0;
         for(map<int,cashflowData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
         {
-            if(it->first > w->startCashFlowId )
-                w->startCashFlowId = it->first;
             cashFlowTable->insertRow(row);
             for(int col=CASHFLOW_ID; col < CASHFLOW_END; col++)
             {
@@ -280,9 +300,11 @@ errorType populateSavedData()
                 {
                     QTableWidgetItem *item = new QTableWidgetItem();
                     char data[256] = {'\0',};
-                    strcpy(data,beBusinessMgr->getCashflowManager()->getElement(it->second, col));
+                    strcpy(data,cflwMgr->getElement(it->second, col));
                     item->setText(data);
                     item->setToolTip(data);
+                    if(!isAdmin || col == CASHFLOW_ID)
+                            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
                     cashFlowTable->setItem(row,col,item);
                 }
             }
@@ -291,16 +313,15 @@ errorType populateSavedData()
     }
     else
         fout <<"info:ifHandleDB.cpp:populateSavedData:no Cash Flow data populated" << endl;
-    if(beBusinessMgr->isSummaryDataRead)
+    if(beBussinessMgr->isSummaryDataRead)
     {
         QTableWidget *sumTable = w->getSummaryTable();
-        map <int, sumData_t> & table = beBusinessMgr->getSumManager()->getSumTable();
-        int rowCount = beBusinessMgr->getSumManager()->totItems;
+        BE_SumManager *sumMgr = beBussinessMgr->getSumManager();
+        map <int, sumData_t> & table = sumMgr->getSumTable();
+        int rowCount = sumMgr->totItems;
         int row = 0;
         for(map<int,sumData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
         {
-            if(it->first > w->startSumId )
-                w->startSumId = it->first;
             sumTable->insertRow(row);
             for(int col=SUM_ID; col < SUM_END; col++)
             {
@@ -308,9 +329,11 @@ errorType populateSavedData()
                 {
                     QTableWidgetItem *item = new QTableWidgetItem();
                     char data[256] = {'\0',};
-                    strcpy(data,beBusinessMgr->getSumManager()->getElement(it->second, col));
+                    strcpy(data,sumMgr->getElement(it->second, col));
                     item->setText(data);
                     item->setToolTip(data);
+                    if(!isAdmin || col == SUM_ID)
+                            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
                     sumTable->setItem(row,col,item);
                 }
             }

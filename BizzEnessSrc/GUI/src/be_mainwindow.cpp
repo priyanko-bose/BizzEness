@@ -53,6 +53,16 @@ BE_MainWindow::BE_MainWindow(QWidget *parent) :
     ui->purchaseTableWidget->setColumnHidden(0,false);
 
 
+    ui->stockTableWidget->setColumnCount(13);
+    for(int col = 0; col <= 12 ; col++){
+        QTableWidgetItem *header1 = new QTableWidgetItem();
+        header1->setText(table_ui_fields[TABLE_STOCK][col]);
+        ui->stockTableWidget->setHorizontalHeaderItem(col,header1);
+    }
+    //Show/Don't Show Stock Table Unique Id
+    ui->stockTableWidget->setColumnHidden(0,false);
+
+
     ui->savePushButton->setEnabled(false);
     ui->cancelPushButton->setEnabled(false);
     //Select the summary window as current window
@@ -384,7 +394,7 @@ void BE_MainWindow::on_savePushButton_clicked()
         return;
     if(isStockTableEdited == true){
         saveTableItems(ui->stockTableWidget);
-        //saveToBusinessManager(TABLE_STOCK);
+        saveTableRecords(TABLE_STOCK);
         isStockTableEdited = false;
     }
     if(isPurchaseTableEdited == true){
@@ -563,13 +573,15 @@ void BE_MainWindow::on_printTablePushButton_clicked()
 
 void BE_MainWindow::on_cashFlowTableWidget_cellChanged(int row, int col)
 {
+    if(!isAdmin)
+        return;
     isCashFlowTableEdited = true;
     int id = 0;
     QTableWidget *table = ui->cashFlowTableWidget;
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(tableType(curTableId), table->item(row,id)->text().toInt(),
+            updateToBusinessManager(TABLE_CASHFLOW, table->item(row,id)->text().toInt(),
                                col, table->item(row,col)->text().toStdString());
     }
 
@@ -578,13 +590,15 @@ void BE_MainWindow::on_cashFlowTableWidget_cellChanged(int row, int col)
 }
 void BE_MainWindow::on_salesTableWidget_cellChanged(int row, int col)
 {
+    if(!isAdmin)
+        return;
     isSalesTableEdited = true;
     int id = 0;
     QTableWidget *table = ui->salesTableWidget;
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(tableType(curTableId), table->item(row,id)->text().toInt(),
+            updateToBusinessManager(TABLE_SALES, table->item(row,id)->text().toInt(),
                                col, table->item(row,col)->text().toStdString());
     }
     ui->savePushButton->setEnabled(true);
@@ -592,13 +606,15 @@ void BE_MainWindow::on_salesTableWidget_cellChanged(int row, int col)
 }
 void BE_MainWindow::on_stockTableWidget_cellChanged(int row, int col)
 {
+    if(!isAdmin)
+        return;
     isStockTableEdited = true;
     int id = 0;
     QTableWidget *table = ui->stockTableWidget;
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(tableType(curTableId), table->item(row,id)->text().toInt(),
+            updateToBusinessManager(TABLE_STOCK, table->item(row,id)->text().toUInt(),
                                col, table->item(row,col)->text().toStdString());
     }
     ui->savePushButton->setEnabled(true);
@@ -606,13 +622,15 @@ void BE_MainWindow::on_stockTableWidget_cellChanged(int row, int col)
 }
 void BE_MainWindow::on_plTableWidget_cellChanged(int row, int col)
 {
+    if(!isAdmin)
+        return;
     isPLTableEdited = true;
     int id = 0;
     QTableWidget *table = ui->plTableWidget;
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(tableType(curTableId), table->item(row,id)->text().toInt(),
+            updateToBusinessManager(TABLE_PL, table->item(row,id)->text().toInt(),
                                col, table->item(row,col)->text().toStdString());
     }
     ui->savePushButton->setEnabled(true);

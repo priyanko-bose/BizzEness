@@ -123,6 +123,23 @@ enum pur_table_flds{
     PUR_END
 };
 
+enum stock_table_flds{
+    PROD_ID = 0,
+    PROD_DATE = 1,
+    PROD_BATCH = 2,
+    PROD_NAME = 3,
+    PROD_COMP = 4,
+    PROD_MFG = 5,
+    PROD_EXP = 6,
+    PROD_NOB = 7,
+    PROD_NOI = 8,
+    PROD_NOTI = 9,
+    PROD_CPB = 10,
+    PROD_CPP = 11,
+    PROD_PPB = 12,
+    PROD_END
+};
+
 const char * const table_name[9] = {
     "",
     "Summary" ,
@@ -142,7 +159,7 @@ const char * const table_fields[9][23] = {
     {"SalesId"},
     {"CashFlowId"},
     {"ProfitLossId"},
-    {"StockId" },
+    {"StockId", "LastDate", "BatchNo", "ProductName", "Company", "MfgDate", "ExpDate", "Box", "Pieces", "TotalPieces", "CostPerBox", "CostPerPcs", "PcsPerBox" },
     {"OrdersId" },
     {"SalesReturnId"},
 } ;
@@ -150,23 +167,23 @@ const char * const table_fields[9][23] = {
 const char * const table_fields_desc[9][23] = {
     {""},
     {""} ,
-    {"","10","16","10","10","32","32","8","10","16", "16","16","50","25","16", "50","8","16", "16","16","16","16","16"},
+    {"","10","16","10","10","32","32","8","10","16","16","16","50","25","16","50","8","16", "16","16","16","16","16"},
     {""},
     {""},
     {""},
-    {"" },
+    {"", "16","10","32", "32", "16","16","8","10","16","16","16","16" },
     {"" },
     {""},
 } ;
 
-const char * const table_ui_fields[9][12] = {
+const char * const table_ui_fields[9][13] = {
     {""},
     {""} ,
-    {"purui","PurchaseNo","Date","Bill No.","Batch No.","ProductName","Supplier","Box","Pieces","Total Cost", "Paid","Due"},
+    {"purid","PurchaseNo","Date","Bill No.","Batch No.","ProductName","Supplier","Box","Pieces","Total Cost", "Paid","Due", ""},
     {""},
     {""},
     {""},
-    {"" },
+    {"stockid", "LastDate", "Batch No.", "ProductName", "Company", "MfgDate", "ExpDate", "Box", "Items", "TotalItems", "Cost/Box", "Cost/Pcs", "Pcs/Box" },
     {"" },
     {""},
 } ;

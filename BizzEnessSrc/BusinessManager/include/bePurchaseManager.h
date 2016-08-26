@@ -46,9 +46,9 @@ public:
     errorType insertSavedItem(matrow *);
     errorType readBMData(matrix **, int *);
     errorType getOneRecord(purchaseData_t &, matrow *);
-    errorType getRecord(unsigned int id,matrow *record);
+    errorType getRecord(unsigned int ,matrow *);
     errorType readFileData(string , int *);
-    errorType insertCSVData(CSVRow &row);
+    errorType insertCSVData(CSVRow &);
     errorType deleteAllItems();
     map <unsigned int, purchaseData_t> & getPurchaseTable();
     const char * getElement(purchaseData_t &, int );
