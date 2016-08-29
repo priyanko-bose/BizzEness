@@ -279,9 +279,9 @@ errorType BE_StockManager:: getOneRecord(stockData_t &stockData, matrow *row)
     row->insert(row->begin() + PROD_NOI , uintToString(stockData.noOfItems).c_str());
     row->insert(row->begin() + PROD_NOTI , uintToString(stockData.noOfTotItems).c_str());
 
-    row->insert(row->begin() + PROD_PPB , intToString(stockData.pcs_per_box).c_str());
     row->insert(row->begin() + PROD_CPB , doubleToString(stockData.cost_per_box).c_str());
     row->insert(row->begin() + PROD_CPP , doubleToString(stockData.cost_per_pcs).c_str());
+    row->insert(row->begin() + PROD_PPB , intToString(stockData.pcs_per_box).c_str());
 
     return ERR_NONE;
 }
