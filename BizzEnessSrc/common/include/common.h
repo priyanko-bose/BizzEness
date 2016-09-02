@@ -51,6 +51,7 @@ enum errorType {
     ERR_DB_DEL_ALL,
     ERR_DB_INVALID,
     ERR_PUR_DB_CREATE,
+    ERR_DUP_ID,
     ERR_WRONG_ID
 };
 enum tableType{

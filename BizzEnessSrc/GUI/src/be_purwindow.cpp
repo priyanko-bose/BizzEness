@@ -109,6 +109,7 @@ void BE_PurWindow::initializeSignalsSlots()
     connect(memoUi->productListButtonBox,&QDialogButtonBox::rejected,this,&BE_PurWindow::on_productListButtonBox_rejected);
     connect(memoUi->purMemoUIButtonBox,&QDialogButtonBox::accepted,this,&BE_PurWindow::on_purMemoUIButtonBox_accepted);
     connect(memoUi->purMemoUIButtonBox,&QDialogButtonBox::rejected,this,&BE_PurWindow::on_purMemoUIButtonBox_rejected);
+    connect(memoUi->purTableWidget,&QTableWidget::cellChanged,this,&BE_PurWindow::on_purTableWidget_cellChanged);
 }
 
 
@@ -120,6 +121,17 @@ void BE_PurWindow::on_purAddPushButton_clicked()
 {
    int count = memoUi->purTableWidget->rowCount();
    memoUi->purTableWidget->insertRow(count);
+   QTableWidgetItem *tItem = new QTableWidgetItem();
+   tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
+   memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALCOST), tItem);
+
+   tItem = new QTableWidgetItem();
+   tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
+   memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALPAID), tItem);
+
+   tItem = new QTableWidgetItem();
+   tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
+   memoUi->purTableWidget->setItem(count, getColID(PURUI_DUE), tItem);
 }
 /*
  * This function deletes a row at the products table
@@ -167,11 +179,55 @@ void BE_PurWindow::on_productListButtonBox_accepted()
             if(item->checkState())
             {
                 //insert each product in product table widget
+                QRegularExpression re("(.*)\\((\\S+)\\)$");
+                QRegularExpressionMatch match = re.match(item->text());
+                QString prodname, batchno;
+                if (match.hasMatch()) {
+                    prodname = match.captured(1); // extract product name
+                    batchno= match.captured(2); // extract batch no
+                }
                 int count = memoUi->purTableWidget->rowCount();
                 memoUi->purTableWidget->insertRow(count);
+
                 QTableWidgetItem *tItem = new QTableWidgetItem();
-                tItem->setText(item->text());
-                memoUi->purTableWidget->setItem(count,0,tItem);
+                tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
+                memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALCOST), tItem);
+
+                tItem = new QTableWidgetItem();
+                tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
+                memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALPAID), tItem);
+
+                tItem = new QTableWidgetItem();
+                tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
+                memoUi->purTableWidget->setItem(count, getColID(PURUI_DUE), tItem);
+
+                tItem = new QTableWidgetItem();
+                tItem->setText(prodname);
+                memoUi->purTableWidget->setItem(count,getColID(PURUI_NAME),tItem);
+
+                tItem = new QTableWidgetItem();
+                tItem->setText(batchno);
+                memoUi->purTableWidget->setItem(count,getColID(PURUI_BATCH),tItem);
+
+                matrow *record = '\0';
+                prepareRecord(TABLE_STOCK, hashCode(prodname + batchno), &record);
+
+                tItem = new QTableWidgetItem();
+                tItem->setText(QString::fromStdString(record->at(PROD_CPB)));
+                memoUi->purTableWidget->setItem(count,getColID(PURUI_COSTOFBOX),tItem);
+
+                tItem = new QTableWidgetItem();
+                tItem->setText(QString::fromStdString(record->at(PROD_CPP)));
+                memoUi->purTableWidget->setItem(count,getColID(PURUI_COSTOFPCS),tItem);
+
+                tItem = new QTableWidgetItem();
+                tItem->setText(QString::fromStdString(record->at(PROD_PPB)));
+                memoUi->purTableWidget->setItem(count,getColID(PURUI_PCSPERBOX),tItem);
+
+                if(record){
+                    delete record;
+                    record = '\0';
+                }
                 item->setHidden(true);
             }
             item->setCheckState( Qt::Unchecked );
@@ -208,13 +264,12 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
         QString batchNo = "";
         QString billNo = "";
         QString date = "";
-        unsigned int encodedPass = 0;
+        unsigned int uniqueIds [10] = {0,0,0,0,0,0,0,0,0,0};
         QTableWidgetItem *item = '\0';
         matrow *record = '\0';
         item = memoUi->purTableWidget->item(rowi, getColID(PURUI_NAME));
         if(item)
         {
-            /* Update business manager */
             prodName = item->text().trimmed(); //get product name
             item = '\0';
             item = memoUi->purTableWidget->item(rowi, getColID(PURUI_BATCH));
@@ -224,33 +279,46 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
             billNo = memoUi->billNoLineEdit->text().trimmed(); //get the bill no
             date = memoUi->dateEdit->text().trimmed();  //get the date
             QString purNo = memoUi->purNoLineEdit->text().trimmed();
-            encodedPass = hashCode(prodName + batchNo + billNo + date);
 
-            addItemToBusinessManager(TABLE_PURCHASE,encodedPass);
+            /* Update business manager -- start*/
+            uniqueIds[TABLE_PURCHASE] = hashCode(prodName + batchNo + billNo + date);
+            addItemToBusinessManager(TABLE_PURCHASE,uniqueIds[TABLE_PURCHASE]);
+
+            uniqueIds[TABLE_STOCK] = hashCode(prodName + batchNo);
+            int stockIdStatus = addItemToBusinessManager(TABLE_STOCK, uniqueIds[TABLE_STOCK]);
 
             for(int col = PURUI_NAME; col <= PURUI_DUE; col++)
             {
-                if(memoUi->purTableWidget->item(rowi,col))
-                    populatePurWindowData(encodedPass, col,
+                if(memoUi->purTableWidget->item(rowi,col)){
+                    if(col == PURUI_PCSPERBOX)
+                    {
+                        int noOfTotItems = memoUi->purTableWidget->item(rowi,getColID(PURUI_BOXNO))->text().trimmed().toInt() \
+                                            * memoUi->purTableWidget->item(rowi,getColID((purui_table_flds)col))->text().trimmed().toInt();
+                        updateToBusinessManager(TABLE_STOCK, uniqueIds[TABLE_STOCK], PROD_NOTI, QString::number(noOfTotItems).toStdString());
+                    }
+                    populatePurWindowData(uniqueIds, col,
                         memoUi->purTableWidget->item(rowi,getColID((purui_table_flds)col))->text().trimmed().toStdString());
+                }
             }
-            populatePurWindowData(encodedPass, PURUI_BILL,
+            populatePurWindowData(uniqueIds, PURUI_BILL,
                billNo.toStdString());
-            populatePurWindowData(encodedPass, PURUI_PURNO,
+            populatePurWindowData(uniqueIds, PURUI_PURNO,
                purNo.toStdString());
-            populatePurWindowData(encodedPass, PURUI_DATE,
+            populatePurWindowData(uniqueIds, PURUI_DATE,
                memoUi->dateEdit->text().trimmed().toStdString());
-            populatePurWindowData(encodedPass, PURUI_COMP,
+            populatePurWindowData(uniqueIds, PURUI_COMP,
                memoUi->companyLineEdit->text().trimmed().toStdString());
-            populatePurWindowData(encodedPass, PURUI_ADDR,
+            populatePurWindowData(uniqueIds, PURUI_ADDR,
                memoUi->addrTextEdit->toPlainText().trimmed().toStdString());
-            populatePurWindowData(encodedPass, PURUI_CONTACT,
+            populatePurWindowData(uniqueIds, PURUI_CONTACT,
                memoUi->contactLineEdit->text().trimmed().toStdString());
-            populatePurWindowData(encodedPass, PUTRUI_CONTACTNO,
+            populatePurWindowData(uniqueIds, PUTRUI_CONTACTNO,
                memoUi->contactNoLineEdit->text().trimmed().toStdString());
-            populatePurWindowData(encodedPass, PURUI_REMARKS,
+            populatePurWindowData(uniqueIds, PURUI_REMARKS,
                memoUi->remarksTextEdit->toPlainText().trimmed().toStdString());
+            /* Update business manager -- end*/
 
+            /* Update UI -- start*/
             int row = curTable->rowCount();
             curTable->insertRow(row);
             for (int col = 0; col < curTable->columnCount(); col++)
@@ -260,7 +328,7 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
                      data->setFlags(data->flags() & ~Qt::ItemIsEditable);
                 if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][0])
                 {
-                    data->setText(QString::number(encodedPass));
+                    data->setText(QString::number(uniqueIds[TABLE_PURCHASE]));
                     curTable->setItem(row,col, data);
                 }
                 else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][1])
@@ -334,13 +402,120 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
                 if(curTable->item(row,col))
                     curTable->item(row,col)->setToolTip(curTable->item(row,col)->text());
             }
-            prepareRecord(TABLE_PURCHASE, encodedPass, &record);
-            saveRecordInDB(TABLE_PURCHASE, encodedPass, record);
+            /* Update UI -- end*/
+
+            /* Update Database -- start*/
+            prepareRecord(TABLE_PURCHASE, uniqueIds[TABLE_PURCHASE], &record);
+            saveRecordInDB(TABLE_PURCHASE, uniqueIds[TABLE_PURCHASE], record);
+            if(record){
+                delete record;
+                record = '\0';
+            }
+            prepareRecord(TABLE_STOCK, uniqueIds[TABLE_STOCK], &record);
+            if(stockIdStatus == ERR_DUP_ID){
+                updateRecordInDB(TABLE_STOCK, uniqueIds[TABLE_STOCK], record);
+            }
+            else{
+                saveRecordInDB(TABLE_STOCK, uniqueIds[TABLE_STOCK], record);
+            }
+            emit BE_MainWindow::getBeMainWindow()->signalUpdateStockTable(record);
+            /* Update Database -- end*/
+            if(record){
+                delete record;
+                record = '\0';
+            }
         }
+        else
+           continue;
     }
+    BE_MainWindow::getBeMainWindow()->diableSaveCancel();
+    BE_MainWindow::getBeMainWindow()->isStockTableEdited = false;
+    BE_MainWindow::getBeMainWindow()->isPurchaseTableEdited = false;
 }
 
 void BE_PurWindow::on_purMemoUIButtonBox_rejected()
 {
 
+}
+
+
+void BE_PurWindow :: on_purTableWidget_cellChanged(int row, int col){
+    QTableWidget *table = memoUi->purTableWidget;
+    int rowCount = memoUi->purTableWidget->rowCount();
+    double cost = 0.0, paid = 0.0, due = 0.0;
+    double totalcost=0.0, totaltax=0.0, totalpaid=0.0, totaldue=0.0, grandtotal=0.0;
+    if((col == getColID(PURUI_PCSNO)) || (col == getColID(PURUI_COSTOFPCS))
+            || (col == getColID(PURUI_BOXNO)) || (col == getColID(PURUI_COSTOFBOX))
+                || (col == getColID(PURUI_EXPNS)) || (col == getColID(PURUI_TAX))){
+
+        if(table->item(row, getColID(PURUI_PCSNO)) && table->item(row,getColID(PURUI_COSTOFPCS)))
+            cost = cost + table->item(row, getColID(PURUI_PCSNO))->text().toInt() *
+                       table->item(row,getColID(PURUI_COSTOFPCS))->text().toDouble();
+
+        if(table->item(row, getColID(PURUI_BOXNO)) && table->item(row,getColID(PURUI_COSTOFBOX)))
+            cost = cost + table->item(row, getColID(PURUI_BOXNO))->text().toInt() *
+                       table->item(row,getColID(PURUI_COSTOFBOX))->text().toDouble();
+
+        if(table->item(row, getColID(PURUI_EXPNS)))
+            cost = cost + table->item(row,getColID(PURUI_EXPNS))->text().toDouble();
+
+        if(table->item(row, getColID(PURUI_TAX))){
+            cost = cost + table->item(row,getColID(PURUI_TAX))->text().toDouble();
+            for(int iter = 0; iter < rowCount; iter++ ){
+                if(table->item(iter, getColID(PURUI_TAX)))
+                    totaltax = totaltax + table->item(iter, getColID(PURUI_TAX))->text().toDouble();
+            }
+            memoUi->totalTaxLineEdit->setText(QString::number(totaltax));
+        }
+
+
+        if(!table->item(row, getColID(PURUI_TOTALCOST))){
+            QTableWidgetItem *item = new QTableWidgetItem();
+            table->setItem(row, getColID(PURUI_TOTALCOST), item);
+        }
+        table->item(row, getColID(PURUI_TOTALCOST))->setText(QString::number(cost));
+    }
+
+    if((col == getColID(PURUI_CASHPAID)) || (col == getColID(PURUI_CHEQPAID))){
+        if(table->item(row, getColID(PURUI_CASHPAID)))
+            paid = paid  + table->item(row,getColID(PURUI_CASHPAID))->text().toDouble();
+        if(table->item(row, getColID(PURUI_CHEQPAID)))
+            paid = paid  + table->item(row,getColID(PURUI_CHEQPAID))->text().toDouble();
+
+        if(!table->item(row, getColID(PURUI_TOTALPAID))){
+            QTableWidgetItem *item = new QTableWidgetItem();
+            table->setItem(row, getColID(PURUI_TOTALPAID), item);
+        }
+        table->item(row, getColID(PURUI_TOTALPAID))->setText(QString::number(paid));
+        for(int iter = 0; iter < rowCount; iter++ ){
+            if(table->item(iter, getColID(PURUI_TOTALPAID)))
+                totalpaid = totalpaid + table->item(iter, getColID(PURUI_TOTALPAID))->text().toDouble();
+        }
+        memoUi->totalPaidLineEdit->setText(QString::number(totalpaid));
+    }
+
+    if((col == getColID(PURUI_TOTALCOST)) || (col == getColID(PURUI_TOTALPAID))){
+        if(table->item(row, getColID(PURUI_TOTALCOST)))
+            due = due + table->item(row,getColID(PURUI_TOTALCOST))->text().toDouble();
+        if(table->item(row, getColID(PURUI_TOTALPAID)))
+            due = due - table->item(row,getColID(PURUI_TOTALPAID))->text().toDouble();
+
+        if(!table->item(row, getColID(PURUI_DUE))){
+            QTableWidgetItem *item = new QTableWidgetItem();
+            table->setItem(row, getColID(PURUI_DUE), item);
+        }
+        table->item(row, getColID(PURUI_DUE))->setText(QString::number(due));
+        for(int iter = 0; iter < rowCount; iter++ ){
+            if(table->item(iter, getColID(PURUI_TOTALCOST)))
+                grandtotal = grandtotal + table->item(iter, getColID(PURUI_TOTALCOST))->text().toDouble();
+            if(table->item(iter, getColID(PURUI_TOTALPAID)))
+                totalpaid = totalpaid + table->item(iter, getColID(PURUI_TOTALPAID))->text().toDouble();
+            if(table->item(iter, getColID(PURUI_DUE)))
+                totaldue = totaldue + table->item(iter, getColID(PURUI_DUE))->text().toDouble();
+            totalcost = grandtotal - memoUi->totalTaxLineEdit->text().toDouble();
+        }
+        memoUi->grandTotalLineEdit->setText(QString::number(grandtotal));
+        memoUi->totalCostLineEdit->setText(QString::number(totalcost));
+        memoUi->totalDueLineEdit->setText(QString::number(totaldue));
+    }
 }

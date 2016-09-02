@@ -66,6 +66,65 @@ const char * BE_StockManager::getElement(stockData_t &stockData, int itemno)
 }
 
 /*
+ * This function sets the fields of a stock table entry
+ * entry is identified by id and fields are identified by field name
+ */
+errorType BE_StockManager::setItem(unsigned int key, int itemno, string val)
+{
+    //get the stock table entry
+    if(this->stockTable.find(key) == this->stockTable.end()){
+        fout << "error("<<ERR_WRONG_ID<<"):beStockManager.cpp:setItem"<<endl;
+        return ERR_WRONG_ID;
+    }
+    else{
+        stockData_t & stockData = this->stockTable.at(key);
+
+        switch(itemno)
+        {
+        case PROD_BATCH:
+            stockData.batchNo = val.c_str();
+            break;
+        case PROD_DATE:
+            stockData.date = val.c_str();
+            break;
+        case PROD_NAME:
+            stockData.productName = val.c_str();
+            break;
+        case PROD_COMP:
+            stockData.company = val.c_str();
+            break;
+        case PROD_MFG:
+            stockData.mfgDate = val.c_str();
+            break;
+        case PROD_EXP:
+            stockData.expDate = val.c_str();
+            break;
+        case PROD_NOB:
+            stockData.noOfBoxes = atoi(val.c_str());
+            break;
+        case PROD_NOI:
+            stockData.noOfItems = atoi(val.c_str());
+            break;
+        case PROD_NOTI:
+            stockData.noOfTotItems = atoi(val.c_str());
+            break;
+        case PROD_CPB:
+            stockData.cost_per_box = atof(val.c_str());
+            break;
+        case PROD_CPP:
+            stockData.cost_per_pcs = atof(val.c_str());
+            break;
+        case PROD_PPB:
+            stockData.pcs_per_box = atoi(val.c_str());
+            break;
+        default:
+            break;
+        };
+    }
+    return ERR_NONE;
+}
+
+/*
  * This function updates the fields of a stock table entry
  * entry is identified by id and fields are identified by field name
  */
@@ -100,13 +159,14 @@ errorType BE_StockManager::updateItem(unsigned int key, int itemno, string val)
             stockData.expDate = val.c_str();
             break;
         case PROD_NOB:
-            stockData.noOfBoxes = atoi(val.c_str());;
+            stockData.noOfBoxes = stockData.noOfBoxes + atoi(val.c_str());
             break;
         case PROD_NOI:
-            stockData.noOfItems = atoi(val.c_str());
+            stockData.noOfItems = stockData.noOfItems + atoi(val.c_str());
+            stockData.noOfTotItems = stockData.noOfTotItems + atoi(val.c_str());
             break;
         case PROD_NOTI:
-            stockData.noOfTotItems = atoi(val.c_str());
+            stockData.noOfTotItems = stockData.noOfTotItems + atoi(val.c_str());
             break;
         case PROD_CPB:
             stockData.cost_per_box = atof(val.c_str());
@@ -130,26 +190,32 @@ errorType BE_StockManager::updateItem(unsigned int key, int itemno, string val)
  */
 errorType BE_StockManager::addNewItem(unsigned int key)
 {
-    stockData_t stockData;
+    if(this->stockTable.find(key) == this->stockTable.end()){
+        stockData_t stockData;
 
-    stockData.batchNo = "";
-    stockData.company = "";
-    stockData.date = "";
-    stockData.productName = "";
-    stockData.expDate = "";
-    stockData.mfgDate = "";
+        stockData.batchNo = "";
+        stockData.company = "";
+        stockData.date = "";
+        stockData.productName = "";
+        stockData.expDate = "";
+        stockData.mfgDate = "";
 
-    stockData.noOfItems = 0;
-    stockData.noOfBoxes = 0;
-    stockData.noOfTotItems = 0;
-    stockData.cost_per_box = 0.0;
-    stockData.cost_per_pcs = 0.0;
-    stockData.pcs_per_box = 0;
+        stockData.noOfItems = 0;
+        stockData.noOfBoxes = 0;
+        stockData.noOfTotItems = 0;
+        stockData.cost_per_box = 0.0;
+        stockData.cost_per_pcs = 0.0;
+        stockData.pcs_per_box = 0;
 
-    stockData.product_id = key;
-    //insert into the tock table map
-    this->stockTable.insert(std::pair<unsigned int,stockData_t>(key,stockData));
-    totItems++;
+        stockData.product_id = key;
+        //insert into the tock table map
+        this->stockTable.insert(std::pair<unsigned int,stockData_t>(key,stockData));
+        totItems++;
+    }
+    else{
+        fout << "Key Already Exists:beStockManager.cpp:addNewItem"<<endl;
+        return ERR_DUP_ID;
+    }
     return ERR_NONE;
 }
 
@@ -288,6 +354,10 @@ errorType BE_StockManager:: getOneRecord(stockData_t &stockData, matrow *row)
 
 errorType BE_StockManager :: getRecord(unsigned int id,matrow *record)
 {
+    if(this->stockTable.find(id) == this->stockTable.end()){
+        fout << "error("<<ERR_WRONG_ID<<"):beStockManager.cpp:setItem"<<endl;
+        return ERR_WRONG_ID;
+    }
     map <unsigned int, stockData_t> & mymap = this->stockTable;
     getOneRecord(mymap.at(id),record);
     return ERR_NONE;
@@ -368,8 +438,11 @@ list<string> *BE_StockManager::getStockProductList()
     {
         prodList = new list<string>();
         for (map<unsigned int,stockData_t>::iterator it=mymap.begin(); it!=mymap.end(); ++it){
-            string item = it->second.productName + "(" +it->second.batchNo +")";
-            prodList->push_back(item);
+            string item = it->second.productName;
+            if(!item.empty()){
+                item = item + "(" +it->second.batchNo +")";
+                prodList->push_back(item);
+            }
         }
     }
     return prodList;

@@ -86,14 +86,14 @@ const char * BE_PurchaseManager::getElement(purchaseData_t &purchaseData, int it
 }
 
 /*
- * This function updates the fields of a purchase table entry
+ * This function sets the fields of a purchase table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_PurchaseManager::updateItem(unsigned int key, int itemno, string val)
+errorType BE_PurchaseManager::setItem(unsigned int key, int itemno, string val)
 {
     //get the purchase table entry
     if(this->purchaseTable.find(key) == this->purchaseTable.end()){
-        fout << "error("<<ERR_WRONG_ID<<"):bePurchaseManager.cpp:updatePurchaseManager"<<endl;
+        fout << "error("<<ERR_WRONG_ID<<"):bePurchaseManager.cpp:setItem"<<endl;
         return ERR_WRONG_ID;
     }
     else{
@@ -175,44 +175,59 @@ errorType BE_PurchaseManager::updateItem(unsigned int key, int itemno, string va
 }
 
 /*
+ * This function sets the fields of a Purchase table entry
+ * entry is identified by id and fields are identified by field name
+ */
+errorType BE_PurchaseManager::updateItem(unsigned int key, int itemno, string val)
+{
+    return setItem(key,itemno, val);
+}
+
+/*
  * This function adds a new purchase table table entry
  * initialized with null values
  */
 errorType BE_PurchaseManager::addNewItem(unsigned int key)
 {
-    purchaseData_t purchaseData;
+    if(this->purchaseTable.find(key) == this->purchaseTable.end()){
+        purchaseData_t purchaseData;
 
-    purchaseData.billno = "";
-    purchaseData.batchNo = "";
-    purchaseData.supplier = "";
-    purchaseData.date = "";
-    purchaseData.productName = "";
+        purchaseData.billno = "";
+        purchaseData.batchNo = "";
+        purchaseData.supplier = "";
+        purchaseData.date = "";
+        purchaseData.productName = "";
 
-    purchaseData.noOfItems = 0;
-    purchaseData.noOfBoxes = 0;
-    purchaseData.totalCost = 0.0;
-    purchaseData.paidAmnt = 0.0;
-    purchaseData.dueAmnt = 0.0;
+        purchaseData.noOfItems = 0;
+        purchaseData.noOfBoxes = 0;
+        purchaseData.totalCost = 0.0;
+        purchaseData.paidAmnt = 0.0;
+        purchaseData.dueAmnt = 0.0;
 
-    purchaseData.purno = "";
-    purchaseData.suppaddr = "";
-    purchaseData.contact = "";
-    purchaseData.contactno = "";
-    purchaseData.remarks = "";
+        purchaseData.purno = "";
+        purchaseData.suppaddr = "";
+        purchaseData.contact = "";
+        purchaseData.contactno = "";
+        purchaseData.remarks = "";
 
-    purchaseData.pcsperbox = 0;
+        purchaseData.pcsperbox = 0;
 
-    purchaseData.costofbox = 0.0;
-    purchaseData.costofpcs = 0.0;
-    purchaseData.tax = 0.0;
-    purchaseData.expns = 0.0;
-    purchaseData.cashpaid = 0.0;
-    purchaseData.chqpaid = 0.0;
+        purchaseData.costofbox = 0.0;
+        purchaseData.costofpcs = 0.0;
+        purchaseData.tax = 0.0;
+        purchaseData.expns = 0.0;
+        purchaseData.cashpaid = 0.0;
+        purchaseData.chqpaid = 0.0;
 
-    purchaseData.purchase_id = key;
-    //insert into the tock table map
-    this->purchaseTable.insert(std::pair<unsigned int,purchaseData_t>(key,purchaseData));
-    totItems++;
+        purchaseData.purchase_id = key;
+        //insert into the tock table map
+        this->purchaseTable.insert(std::pair<unsigned int,purchaseData_t>(key,purchaseData));
+        totItems++;
+    }
+    else{
+        fout << "Key Already Exists:beStockManager.cpp:addNewItem"<<endl;
+        return ERR_DUP_ID;
+    }
     return ERR_NONE;
 }
 
@@ -384,6 +399,11 @@ errorType BE_PurchaseManager:: getOneRecord(purchaseData_t &purchaseData, matrow
 
 errorType BE_PurchaseManager :: getRecord(unsigned int id,matrow *record)
 {
+    //get the purchase table entry
+    if(this->purchaseTable.find(id) == this->purchaseTable.end()){
+        fout << "error("<<ERR_WRONG_ID<<"):bePurchaseManager.cpp:setItem"<<endl;
+        return ERR_WRONG_ID;
+    }
     map <unsigned int, purchaseData_t> & mymap = this->purchaseTable;
     getOneRecord(mymap.at(id),record);
     return ERR_NONE;

@@ -42,9 +42,14 @@ public:
     void initializeSignalsSlots();
     void populatePurchaseData(BE_PurWindow *, int);
     int setCurrentTab(QString & );
+    void diableSaveCancel();
 
-private slots:
+public slots:
+    void on_signalUpdateStockTable(matrow *);
     void print(QPrinter *printer);
+
+signals:
+    void signalUpdateStockTable(matrow *);
 
 private:
     BE_MainWindow(QWidget *parent = 0);
@@ -52,9 +57,8 @@ private:
     Ui::MainWindow *ui;
     QTableWidget *curTable;
     int curTableId;
-    void saveTableItems(QTableWidget *);
+    void saveTableItems(tableType , QTableWidget *);
     void cancelTableItems(QTableWidget *);
-
 
     void on_addPushButton_clicked();
     void on_delPushButton_clicked();

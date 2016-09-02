@@ -13,5 +13,6 @@ errorType addItemToBusinessManager(tableType, unsigned int );
 errorType saveRecordsInCSV(tableType);
 errorType delItemFromBusinessManager(tableType, unsigned int);
 errorType prepareRecord(tableType, unsigned int, matrow **);
-
+errorType setItemToBusinessManager(tableType , unsigned int , int , string );
+errorType updateItemKeyToBusinessManager(tableType , unsigned int , unsigned int );
 #endif // IFOPERATION_H

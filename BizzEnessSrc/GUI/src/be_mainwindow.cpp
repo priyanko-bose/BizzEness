@@ -78,6 +78,8 @@ BE_MainWindow::BE_MainWindow(QWidget *parent) :
     QObject::connect(ui->importAllDataPushButton, &QPushButton::clicked, this, &BE_MainWindow::on_importAllDataPushButton_clicked);
     QObject::connect(ui->printTablePushButton, &QPushButton::clicked, this, &BE_MainWindow::on_printTablePushButton_clicked);
     QObject::connect(ui->previewTablePushButton, &QPushButton::clicked, this, &BE_MainWindow::on_previewPushButton_clicked);
+    if(!QObject::connect(this, SIGNAL(signalUpdateStockTable(matrow *)),this, SLOT(on_signalUpdateStockTable(matrow *))))
+      qDebug() << "CHECKED_CONNECT failed";
 }
 
 /*
@@ -176,6 +178,12 @@ BE_MainWindow* BE_MainWindow::getBeMainWindow()
     return beMainWindowObj; //return the address of the singleton Form Object
 }
 
+void BE_MainWindow::diableSaveCancel()
+{
+    ui->savePushButton->setEnabled(false);
+    ui->cancelPushButton->setEnabled(false);
+}
+
 /*--------------private member functions--------*/
 /*
  * Sets the Tool Tip Text with the value
@@ -184,12 +192,49 @@ BE_MainWindow* BE_MainWindow::getBeMainWindow()
  * This saves the changes permanently
  * Table in GUI
  */
-void BE_MainWindow::saveTableItems(QTableWidget *table)
+void BE_MainWindow::saveTableItems(tableType tbletype, QTableWidget *table)
 {
     int rowCount = table->rowCount();
     int colCount = table->columnCount();
     for(int row=0; row< rowCount; row++)
     {
+        unsigned int newkey = 0;
+        unsigned int oldKey = 0;
+        if(!table->item(row, 0))
+            continue;
+        else
+            oldKey = table->item(row, 0)->text().toUInt();
+        if(tbletype == TABLE_PURCHASE){
+            QString prodName, batchNo, billNo, date;
+            if(table->item(row, PUR_PROD))
+                 prodName = table->item(row, PUR_PROD)->text().trimmed();
+            if(table->item(row, PUR_BATCH))
+                batchNo = table->item(row, PUR_BATCH)->text().trimmed();
+            if(table->item(row, PUR_BILLNO))
+                billNo = table->item(row, PUR_BILLNO)->text().trimmed();
+            if(table->item(row, PUR_DATE))
+                date = table->item(row, PUR_DATE)->text().trimmed();
+            if(prodName.isEmpty() || batchNo.isEmpty() || billNo.isEmpty())
+                return;
+            newkey = hashCode(prodName + batchNo + billNo + date);
+        }
+        else if(tbletype == TABLE_STOCK){
+            QString prodName, batchNo;
+            if(table->item(row, PUR_PROD))
+                 prodName = table->item(row, PROD_NAME)->text().trimmed();
+            if(table->item(row, PUR_BATCH))
+                batchNo = table->item(row, PROD_BATCH)->text().trimmed();
+            if(prodName.isEmpty() || batchNo.isEmpty())
+                return;
+            newkey = hashCode(prodName + batchNo);
+        }
+        else
+            newkey = oldKey = 0;
+        if( oldKey != newkey)
+        {
+            updateItemKeyToBusinessManager(tbletype, oldKey, newkey);
+            table->item(row, 0)->setText(QString::number(newkey));
+        }
         for (int col = 0; col<= colCount; col++)
         {
             if(table->item(row,col))
@@ -321,7 +366,6 @@ void BE_MainWindow::on_addPushButton_clicked()
     int row = curTable->rowCount();
     curTable->insertRow(row);
     int id = 0;
-    matrow *record = '\0';
     QTableWidgetItem *item = new QTableWidgetItem();
     item->setText(QString::number(prod));
     item->setToolTip(QString::number(prod));
@@ -331,9 +375,6 @@ void BE_MainWindow::on_addPushButton_clicked()
     {
         addItemToBusinessManager(tableType(curTableId),prod);
     }
-
-    prepareRecord(tableType(curTableId), prod, &record);
-    saveRecordInDB(tableType(curTableId), prod, record);
 
     ui->savePushButton->setEnabled(false);
     ui->cancelPushButton->setEnabled(false);
@@ -393,31 +434,31 @@ void BE_MainWindow::on_savePushButton_clicked()
     if(!isAdmin)
         return;
     if(isStockTableEdited == true){
-        saveTableItems(ui->stockTableWidget);
+        saveTableItems(TABLE_STOCK, ui->stockTableWidget);
         saveTableRecords(TABLE_STOCK);
         isStockTableEdited = false;
     }
     if(isPurchaseTableEdited == true){
-        saveTableItems(ui->purchaseTableWidget);
+        saveTableItems(TABLE_PURCHASE, ui->purchaseTableWidget);
         saveTableRecords(TABLE_PURCHASE);
         isPurchaseTableEdited = false;
     }
     if(isSalesTableEdited == true){
-        saveTableItems(ui->salesTableWidget);
+        saveTableItems(TABLE_SALES, ui->salesTableWidget);
         //saveToBusinessManager(TABLE_SALES);
         isSalesTableEdited = false;
     }
     if(isPLTableEdited == true){
-        saveTableItems(ui->plTableWidget);
+        saveTableItems(TABLE_PL, ui->plTableWidget);
         //saveToBusinessManager(TABLE_PL);
         isPLTableEdited = false;
     }
     if(isCashFlowTableEdited == true){
-        saveTableItems(ui->cashFlowTableWidget);
+        saveTableItems(TABLE_CASHFLOW, ui->cashFlowTableWidget);
         //saveToBusinessManager(TABLE_CASHFLOW);
         isCashFlowTableEdited = false;
     }
-    saveTableItems(ui->sumTableWidget);
+    saveTableItems(TABLE_SUMMARY, ui->sumTableWidget);
     //saveToBusinessManager(TABLE_SUMMARY);
 
     ui->savePushButton->setEnabled(false);
@@ -452,7 +493,11 @@ void BE_MainWindow:: on_cancelPushButton_clicked()
     ui->cancelPushButton->setEnabled(false);
 }
 
-
+/*
+ * ---------------------------------------------------------------------------------------
+ * This SLOTS are for import, export to CSV/PDF, print, print preview buttons
+ *----------------------------------------------------------------------------------------
+ */
 void BE_MainWindow::on_exportAllDataPushButton_clicked()
 {
     int errorCode = saveRecordsInCSV((tableType)curTableId);
@@ -531,6 +576,7 @@ End:
     ui->savePushButton->setEnabled(false);
     ui->cancelPushButton->setEnabled(false);
 }
+
 void BE_MainWindow::print(QPrinter *printer)
 {
     QPainter painter(printer);
@@ -541,6 +587,7 @@ void BE_MainWindow::print(QPrinter *printer)
     tableName = tableName + " Table:-";
     exportToPdf(printer, &painter, curTable, tableName);
 }
+
 void BE_MainWindow::on_previewPushButton_clicked()
 {
     QPrinter printer;
@@ -581,7 +628,7 @@ void BE_MainWindow::on_cashFlowTableWidget_cellChanged(int row, int col)
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(TABLE_CASHFLOW, table->item(row,id)->text().toInt(),
+            setItemToBusinessManager(TABLE_CASHFLOW, table->item(row,id)->text().toInt(),
                                col, table->item(row,col)->text().toStdString());
     }
 
@@ -598,7 +645,7 @@ void BE_MainWindow::on_salesTableWidget_cellChanged(int row, int col)
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(TABLE_SALES, table->item(row,id)->text().toInt(),
+            setItemToBusinessManager(TABLE_SALES, table->item(row,id)->text().toInt(),
                                col, table->item(row,col)->text().toStdString());
     }
     ui->savePushButton->setEnabled(true);
@@ -614,7 +661,7 @@ void BE_MainWindow::on_stockTableWidget_cellChanged(int row, int col)
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(TABLE_STOCK, table->item(row,id)->text().toUInt(),
+            setItemToBusinessManager(TABLE_STOCK, table->item(row,id)->text().toUInt(),
                                col, table->item(row,col)->text().toStdString());
     }
     ui->savePushButton->setEnabled(true);
@@ -630,7 +677,7 @@ void BE_MainWindow::on_plTableWidget_cellChanged(int row, int col)
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(TABLE_PL, table->item(row,id)->text().toInt(),
+            setItemToBusinessManager(TABLE_PL, table->item(row,id)->text().toInt(),
                                col, table->item(row,col)->text().toStdString());
     }
     ui->savePushButton->setEnabled(true);
@@ -646,9 +693,43 @@ void BE_MainWindow::on_purchaseTableWidget_cellChanged(int row, int col)
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            updateToBusinessManager(TABLE_PURCHASE, table->item(row,id)->text().toUInt(),
+            setItemToBusinessManager(TABLE_PURCHASE, table->item(row,id)->text().toUInt(),
                                col, table->item(row,col)->text().toStdString());
     }
     ui->savePushButton->setEnabled(true);
     ui->cancelPushButton->setEnabled(true);
+}
+
+/*
+ * ---------------------------------------------------------------------------------------
+ * This SLOTS are for user defined Signals used to update different tables
+ *----------------------------------------------------------------------------------------
+ */
+
+void BE_MainWindow::on_signalUpdateStockTable(matrow *record)
+{
+    QTableWidget *stockTable = BE_MainWindow::getBeMainWindow()->getStockTable();
+    int rowCount = stockTable->rowCount();
+    for(int iter=0; iter < rowCount; iter++)
+    {
+        unsigned int id = atol(record->at(PROD_ID).c_str());
+        if(stockTable->item(iter,PROD_ID) &&
+             (id == stockTable->item(iter,PROD_ID)->text().toUInt()))
+        {
+            for(int col = PROD_ID + 1; col < PROD_END; col++)
+            {
+                if(!stockTable->item(iter,col)){
+                    QTableWidgetItem *item = new QTableWidgetItem();
+                    stockTable->setItem(iter, col, item);
+                }
+                stockTable->item(iter,col)->setText(QString::fromStdString(record->at(col)));
+            }
+            break;
+        }
+        else
+            continue;
+
+    }
+    isStockTableEdited = false;
+    BE_MainWindow::getBeMainWindow()->diableSaveCancel();
 }

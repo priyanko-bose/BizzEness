@@ -13,7 +13,7 @@ errorType populateSavedData();
 QStringList *getProductList();
 
 //Window specific functions
-errorType populatePurWindowData(unsigned int , int , string );
+errorType populatePurWindowData(unsigned int *, int , string );
 errorType importTableData(string);
 
 #endif // IFHANDLEGUI_H

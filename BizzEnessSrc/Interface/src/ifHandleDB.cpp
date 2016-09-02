@@ -122,7 +122,7 @@ errorType saveTableRecords(tableType type)
         for(int iter=0; iter < totItems; iter++){
             fout << records->at(iter).at(0);
             errorCode |= beDbObj->editIntoDataBase(type, PUR_ID, PUR_END,
-                                                   atol(records->at(iter).at(0).c_str()) , &records->at(iter));
+                                                   atol(records->at(iter).at(PUR_ID).c_str()) , &records->at(iter));
         }
     }
     else if(type == TABLE_STOCK){
@@ -131,7 +131,7 @@ errorType saveTableRecords(tableType type)
         for(int iter=0; iter < totItems; iter++){
             fout << records->at(iter).at(0);
             errorCode |= beDbObj->editIntoDataBase(type, PROD_ID, PROD_END,
-                                                   atol(records->at(iter).at(0).c_str()) , &records->at(iter));
+                                                   atol(records->at(iter).at(PROD_ID).c_str()) , &records->at(iter));
         }
     }
     totItems = 0;
@@ -147,6 +147,23 @@ errorType saveTableRecords(tableType type)
     return (errorType)errorCode;
 }
 
+/* Update one record row in a table to database */
+errorType updateRecordInDB(tableType tbl, unsigned int id, matrow *record)
+{
+    int errorCode = 0 ;
+    BE_DatabaseHandler *beDbObj = BE_DatabaseHandler::getDataBaseHandlerInstance();
+    switch(tbl){
+        case TABLE_PURCHASE:
+            errorCode = beDbObj->editIntoDataBase(TABLE_PURCHASE, PUR_ID, PUR_END, id, record);
+            break;
+        case TABLE_STOCK:
+            errorCode = beDbObj->editIntoDataBase(TABLE_STOCK, PROD_ID, PROD_END, id, record);
+            break;
+        default:
+            break;
+    }
+    return (errorType)errorCode;
+}
 /* Add one record row in a table to database */
 errorType saveRecordInDB(tableType tbl, unsigned int id, matrow *record)
 {
@@ -162,8 +179,6 @@ errorType saveRecordInDB(tableType tbl, unsigned int id, matrow *record)
         default:
             break;
     }
-    delete record;
-    record = '\0';
     return (errorType)errorCode;
 }
 

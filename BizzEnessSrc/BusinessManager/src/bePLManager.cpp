@@ -70,7 +70,7 @@ const char * BE_PLManager::getElement(plData_t &plData, int itemno)
  * This function updates the fields of a pl table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_PLManager::updateItem(int key, int itemno, string val)
+errorType BE_PLManager::setItem(int key, int itemno, string val)
 {
     //get the pl table entry
     if(this->plTable.find(key) == this->plTable.end()){
@@ -120,6 +120,15 @@ errorType BE_PLManager::updateItem(int key, int itemno, string val)
         };
     }
     return ERR_NONE;
+}
+
+/*
+ * This function sets the fields of a Profit & Loss table entry
+ * entry is identified by id and fields are identified by field name
+ */
+errorType BE_PLManager::updateItem(unsigned int key, int itemno, string val)
+{
+    return setItem(key,itemno, val);
 }
 
 /*

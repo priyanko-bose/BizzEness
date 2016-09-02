@@ -2,6 +2,7 @@
 #include <fstream>
 #include "Interface/include/ifHandleDB.h"
 #include "Interface/include/ifHandleGUI.h"
+#include "Interface/include/ifHandleBM.h"
 #include "GUI/include/be_mainwindow.h"
 #include "BusinessManager/include/beBusinessManager.h"
 #include "BusinessManager/include/bePurchaseManager.h"
@@ -143,6 +144,92 @@ errorType importTableData(string path)
     //Restore Table data from all places -- end
     errorCode |= populateSavedData();
     return (errorType)errorCode;
+}
+
+/* This function populates the GUI data to Business Manager */
+errorType populatePurWindowData(unsigned int *id, int flds , string data)
+{
+    errorType errorCode = ERR_NONE;
+    switch(flds){
+    case PURUI_NAME:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_PROD, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NAME, data);
+        break;
+    case PURUI_BATCH:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_BATCH, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_BATCH, data);
+        break;
+    case PURUI_BOXNO:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_BOX, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NOB, data);
+        break;
+    case PURUI_PCSNO:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_ITEMS, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NOI, data);
+        break;
+    case PURUI_PCSPERBOX:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_PCSPERBOX, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_PPB, data);
+        break;
+    case PURUI_COSTOFBOX:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_COSTOFBOX, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_CPB, data);
+        break;
+    case PURUI_COSTOFPCS:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_COSTOFPCS, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_CPP, data);
+        break;
+    case PURUI_TAX:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_TAX, data);
+        break;
+    case PURUI_EXPNS:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_EXPNS, data);
+        break;
+    case PURUI_TOTALCOST:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_TOTCOST, data);
+        break;
+    case PURUI_CASHPAID:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_CASHPAID, data);
+        break;
+    case PURUI_CHEQPAID:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_CHEQPAID, data);
+        break;
+    case PURUI_TOTALPAID:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_PAID, data);
+        break;
+    case PURUI_DUE:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_DUE, data);
+        break;
+    case PURUI_BILL:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_BILLNO, data);
+        break;
+    case PURUI_PURNO:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_NO, data);
+        break;
+    case PURUI_DATE:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_DATE, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_DATE, data);
+        break;
+    case PURUI_COMP:
+       setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_SUPP, data);
+       updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_COMP, data);
+        break;
+    case PURUI_ADDR:
+       setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_SUPPADDR, data);
+        break;
+    case PURUI_CONTACT:
+       setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_CONTACT, data);
+       break;
+    case PUTRUI_CONTACTNO:
+       setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_CONTACTNO, data);
+        break;
+    case PURUI_REMARKS:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_REMARKS, data);
+        break;
+    default:
+        break;
+    }
+    return errorCode;
 }
 
 /*

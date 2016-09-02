@@ -4,6 +4,7 @@
 #include "BusinessManager/include/beBusinessManager.h"
 #include "BusinessManager/include/bePurchaseManager.h"
 #include "BusinessManager/include/beStockManager.h"
+#include "Interface/include/ifHandleDB.h"
 
 extern ofstream fout;
 
@@ -73,6 +74,38 @@ errorType updateToBusinessManager(tableType tableId, unsigned  int id, int col, 
     return errorCode;
 }
 
+/*
+ * This function is used to set the data stored in BUSINESSMANAGER Tables
+ * It takes the table name to set, the table entry identified by id and column
+ * and the data to be used for set
+ */
+errorType setItemToBusinessManager(tableType tableId, unsigned  int id, int col, string data)
+{
+    errorType errorCode = ERR_NONE;
+    BE_BusinessManager *beMangObj = BE_BusinessManager::getInstance();
+    if(tableId == TABLE_STOCK)
+        (beMangObj->getStockManager())->setItem(id, col,data);
+    else if(tableId == TABLE_PURCHASE)
+        (beMangObj->getPurchaseManager())->setItem(id, col,data);
+    else if(tableId == TABLE_SALES)
+        (beMangObj->getSalesManager())->setItem(id, col,data);
+    else if(tableId == TABLE_PL)
+        (beMangObj->getPLManager())->setItem(id, col,data);
+    else if(tableId == TABLE_CASHFLOW)
+        (beMangObj->getCashflowManager())->setItem(id, col,data);
+    else if(tableId == TABLE_SUMMARY)
+        (beMangObj->getSumManager())->setItem(id, col,data);
+    else
+    {
+        fout <<"error("<<ERR_TABLENAME<<"):ifcommon.cpp:setItemToBusinessManager: no table_name matched for update" << endl;
+        return ERR_TABLENAME;
+    }
+    if(errorCode){
+        fout <<"error("<<errorCode<<"):ifcommon.cpp:setItemToBusinessManager:"
+            <<string(table_name[tableId])<< "Table item set error:"<< endl;
+    }
+    return errorCode;
+}
 /*
  * This function is used to add a new the data initialized with with null values
  * into BUSINESSMANAGER Table. It takes the table name to add, and an id to identify
@@ -181,81 +214,47 @@ errorType delItemFromBusinessManager(tableType tableId, unsigned int id)
     return errorCode;
 }
 
-/* This function populates the GUI data to Business Manager */
-errorType populatePurWindowData(unsigned int id, int flds , string data)
+errorType updateItemKeyToBusinessManager(tableType tableId, unsigned int oldKey, unsigned int newKey)
 {
-    errorType errorCode = ERR_NONE;
-    switch(flds){
-    case PURUI_NAME:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_PROD, data);
-        break;
-    case PURUI_BATCH:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_BATCH, data);
-        break;
-    case PURUI_BOXNO:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_BOX, data);
-        break;
-    case PURUI_PCSNO:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_ITEMS, data);
-        break;
-    case PURUI_PCSPERBOX:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_PCSPERBOX, data);
-        break;
-    case PURUI_COSTOFBOX:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_COSTOFBOX, data);
-        break;
-    case PURUI_COSTOFPCS:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_COSTOFPCS, data);
-        break;
-    case PURUI_TAX:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_TAX, data);
-        break;
-    case PURUI_EXPNS:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_EXPNS, data);
-        break;
-    case PURUI_TOTALCOST:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_TOTCOST, data);
-        break;
-    case PURUI_CASHPAID:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_CASHPAID, data);
-        break;
-    case PURUI_CHEQPAID:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_CHEQPAID, data);
-        break;
-    case PURUI_TOTALPAID:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_PAID, data);
-        break;
-    case PURUI_DUE:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_DUE, data);
-        break;
-    case PURUI_BILL:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_BILLNO, data);
-        break;
-    case PURUI_PURNO:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_NO, data);
-        break;
-    case PURUI_DATE:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_DATE, data);
-        break;
-    case PURUI_COMP:
-       updateToBusinessManager(TABLE_PURCHASE, id, PUR_SUPP, data);
-        break;
-    case PURUI_ADDR:
-       updateToBusinessManager(TABLE_PURCHASE, id, PUR_SUPPADDR, data);
-        break;
-    case PURUI_CONTACT:
-       updateToBusinessManager(TABLE_PURCHASE, id, PUR_CONTACT, data);
-       break;
-    case PUTRUI_CONTACTNO:
-       updateToBusinessManager(TABLE_PURCHASE, id, PUR_CONTACTNO, data);
-        break;
-    case PURUI_REMARKS:
-        updateToBusinessManager(TABLE_PURCHASE, id, PUR_REMARKS, data);
-        break;
-    default:
-        break;
+    int errorCode = 0;
+    BE_BusinessManager *beMangObj = BE_BusinessManager::getInstance();
+    matrow record;
+    if(tableId == TABLE_STOCK){
+        BE_StockManager *stockMgr = beMangObj->getStockManager();
+        errorCode = stockMgr->getRecord(oldKey, &record);
+        if(!errorCode){
+            errorCode |= stockMgr->addNewItem(newKey);
+            for(int iter =  PROD_ID; iter < PROD_END; iter++)
+                errorCode |= stockMgr->setItem(newKey, iter, record[iter]);
+            errorCode |= stockMgr->deleteItem(oldKey);
+            errorCode |= saveRecordInDB(TABLE_STOCK, newKey, &record);
+        }
     }
-    return errorCode;
+    else if(tableId == TABLE_PURCHASE){
+        BE_PurchaseManager *purMgr = beMangObj->getPurchaseManager();
+        errorCode = purMgr->getRecord(oldKey, &record);
+        if(!errorCode){
+            errorCode |= purMgr->addNewItem(newKey);
+            for(int iter =  PUR_ID; iter < PUR_ID; iter++)
+                errorCode |= purMgr->setItem(newKey, iter, record[iter]);
+            errorCode |= purMgr->deleteItem(oldKey);
+            errorCode |= saveRecordInDB(TABLE_PURCHASE, newKey, &record);
+        }
+    }
+//    else if(tableId == TABLE_SALES)
+//        errorCode = (beMangObj->getSalesManager())->deleteItem(id);
+//    else if(tableId == TABLE_PL)
+//        errorCode = (beMangObj->getPLManager())->deleteItem(id);
+//    else if(tableId == TABLE_CASHFLOW)
+//        errorCode = (beMangObj->getCashflowManager())->deleteItem(id);
+//    else if(tableId == TABLE_SUMMARY)
+//        errorCode = (beMangObj->getSumManager())->deleteItem(id);
+    else
+    {
+        fout <<"error("<<ERR_TABLENAME<<"):ifcommon.cpp:updateItemKeyToBusinessManager: no table_name matched for update" << endl;
+        return ERR_TABLENAME;
+    }
+    return (errorType)errorCode;
 }
 
 errorType prepareRecord(tableType tbl, unsigned int id, matrow **record)

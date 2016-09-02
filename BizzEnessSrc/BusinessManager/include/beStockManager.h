@@ -30,6 +30,7 @@ public:
     BE_StockManager();
     ~BE_StockManager();
     errorType updateItem(unsigned int , int , string );
+    errorType setItem(unsigned int , int , string );
     errorType addNewItem(unsigned int );
     errorType saveItems();
     errorType deleteItem(unsigned int );

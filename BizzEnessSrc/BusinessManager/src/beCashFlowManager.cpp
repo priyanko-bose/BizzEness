@@ -65,7 +65,7 @@ const char * BE_CashflowManager::getElement(cashflowData_t &cashflowData, int it
  * This function updates the fields of a cashflow table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_CashflowManager::updateItem(int key, int itemno, string val)
+errorType BE_CashflowManager::setItem(int key, int itemno, string val)
 {
     //get the cashflow table entry
     if(this->cashflowTable.find(key) == this->cashflowTable.end()){
@@ -112,6 +112,15 @@ errorType BE_CashflowManager::updateItem(int key, int itemno, string val)
         };
     }
     return ERR_NONE;
+}
+
+/*
+ * This function sets the fields of a CashFlow table entry
+ * entry is identified by id and fields are identified by field name
+ */
+errorType BE_CashflowManager::updateItem(unsigned int key, int itemno, string val)
+{
+    return setItem(key,itemno, val);
 }
 
 /*
