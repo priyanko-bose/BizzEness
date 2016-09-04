@@ -8,7 +8,7 @@ using namespace std;
 errorType initializeBManager();
 void deinitializeBManager();
 //Generic fucntions
-errorType updateToBusinessManager(tableType , unsigned int , int , string );
+errorType updateToBusinessManager(tableType , unsigned int , int , string, int);
 errorType addItemToBusinessManager(tableType, unsigned int );
 errorType saveRecordsInCSV(tableType);
 errorType delItemFromBusinessManager(tableType, unsigned int);

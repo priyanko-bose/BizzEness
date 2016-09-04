@@ -6,6 +6,7 @@
 #include "Interface/include/ifHandleDB.h"
 #include "GUI/include/be_guiutils.h"
 #include <QMessageBox>
+#include <QPrintPreviewDialog>
 /*
  * BE_PurWindow Constructor
  * Set up all the UI components
@@ -110,6 +111,7 @@ void BE_PurWindow::initializeSignalsSlots()
     connect(memoUi->purMemoUIButtonBox,&QDialogButtonBox::accepted,this,&BE_PurWindow::on_purMemoUIButtonBox_accepted);
     connect(memoUi->purMemoUIButtonBox,&QDialogButtonBox::rejected,this,&BE_PurWindow::on_purMemoUIButtonBox_rejected);
     connect(memoUi->purTableWidget,&QTableWidget::cellChanged,this,&BE_PurWindow::on_purTableWidget_cellChanged);
+    connect(memoUi->printPushButton,&QPushButton::clicked,this,&BE_PurWindow::on_printPushButton_clicked);
 }
 
 
@@ -292,9 +294,10 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
                 if(memoUi->purTableWidget->item(rowi,col)){
                     if(col == PURUI_PCSPERBOX)
                     {
+                        updateOP stockOP = ADD;
                         int noOfTotItems = memoUi->purTableWidget->item(rowi,getColID(PURUI_BOXNO))->text().trimmed().toInt() \
                                             * memoUi->purTableWidget->item(rowi,getColID((purui_table_flds)col))->text().trimmed().toInt();
-                        updateToBusinessManager(TABLE_STOCK, uniqueIds[TABLE_STOCK], PROD_NOTI, QString::number(noOfTotItems).toStdString());
+                        updateToBusinessManager(TABLE_STOCK, uniqueIds[TABLE_STOCK], PROD_NOTI, QString::number(noOfTotItems).toStdString(), stockOP);
                     }
                     populatePurWindowData(uniqueIds, col,
                         memoUi->purTableWidget->item(rowi,getColID((purui_table_flds)col))->text().trimmed().toStdString());
@@ -518,4 +521,140 @@ void BE_PurWindow :: on_purTableWidget_cellChanged(int row, int col){
         memoUi->totalCostLineEdit->setText(QString::number(totalcost));
         memoUi->totalDueLineEdit->setText(QString::number(totaldue));
     }
+}
+
+void BE_PurWindow::print(QPrinter *printer)
+{
+    QPainter painter(printer);
+    painter.setRenderHints(QPainter::Antialiasing |
+                           QPainter::TextAntialiasing |
+                           QPainter::SmoothPixmapTransform, true);
+
+    QTableWidget *table = memoUi->purTableWidget;
+    int printAreaW = printer->pageRect().width();
+    int printAreaH = printer->pageRect().height();
+
+    int offsetH = 10 * topLeftY;
+    int offsetW = 10 * topLeftX;
+
+    offsetH = drawDoubleLines(&painter, offsetW - areamargin, offsetH, printAreaW - offsetW + areamargin, offsetH) + linespace;
+
+    QRect rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/3, offsetH + maxFontHeight));
+    printLine(&painter, rect.bottomLeft(), "PurchaseNo: " + memoUi->purNoLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.6);
+
+    rect = QRect(QPoint((printAreaW - offsetW)/3, offsetH),QPoint(((printAreaW - offsetW)*2)/3, offsetH + maxFontHeight));
+    printLine(&painter, rect.bottomLeft(), "Bill No: " + memoUi->billNoLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.6);
+
+    rect = QRect(QPoint(((printAreaW - offsetW)*2)/3, offsetH),QPoint(printAreaW - offsetW, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Dated: " + memoUi->dateEdit->text(),
+              "Times New Roman", maxFontHeight * 0.6) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint(printAreaW - offsetW, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Company Name: " + memoUi->companyLineEdit->text(),
+              "Helvetica", maxFontHeight * 0.9) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint(printAreaW - offsetW, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Address: " + memoUi->addrTextEdit->toPlainText(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint(printAreaW - offsetW, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Contact Person: " + memoUi->contactLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint(printAreaW - (offsetW), offsetH + maxFontHeight));
+
+    offsetH = printLine(&painter, rect.bottomLeft(), "Contact: " + memoUi->contactNoLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
+
+    offsetH = drawDoubleLines(&painter, offsetW,offsetH,printAreaW - offsetW, offsetH);
+
+    int count = 0;
+    int columns = table->columnCount();
+    int rows = table->rowCount();
+    int left = rows;
+    int start = 0;
+    int end = 0;
+
+    rows = row_per_page;
+    while(left > 0 ){
+         //Logic to select the portion of Table Widget
+        start = count * row_per_page;
+        end = start + (left > row_per_page ? row_per_page :left);
+        count++;
+        if(left > row_per_page){
+            left = left - row_per_page;
+        }
+        else{
+            left = 0;
+        }
+
+        //Copy the required part from the QTableWidget to for Qtable view fot rendering
+        QAbstractItemModel *model = '\0';
+        model = getTableArea(table, start, 0, end, columns);
+        if(!model)
+            return;
+        QTableView pTableView;
+        pTableView.setModel(model);
+        pTableView.resizeColumnsToContents();
+        int width = getTableAreaWidth(&pTableView, columns, table->verticalHeader()->width());
+        int height = getTableAreaHeight(&pTableView, rows, table->horizontalHeader()->height());
+        pTableView.setFixedSize(width, height);
+        pTableView.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        pTableView.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+        //Adjust painter object to accomodate full printing page
+        painter.save();
+        double xscale = (printAreaW - (offsetW * 2))/double(width);
+        double yscale = (printAreaH - offsetH)/double(height);
+        double scale =   qMin(xscale, yscale);
+        painter.translate(qreal(offsetW * 1.0), qreal(offsetH * 1.0));
+        painter.scale(double(int(scale * 100)/100.0), double(int(scale * 100)/100.0));
+        pTableView.render(&painter);
+        offsetH = offsetH + height  * double(int(scale * 100)/100.0);
+        if(left > 0){
+            printer->newPage();
+            offsetW = 10 * topLeftX;
+            offsetH = 10 * topLeftY;
+        }
+        delete model;
+        model = '\0';
+        painter.restore();
+    }
+
+    offsetH = drawDoubleLines(&painter, offsetW,offsetH,printAreaW - offsetW, offsetH) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Total(incl expn): " + memoUi->totalCostLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Tax: " + memoUi->totalTaxLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Grand Total(incl expn): " + memoUi->grandTotalLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Total Paid: " + memoUi->totalPaidLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75);
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Total Due: " + memoUi->totalDueLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
+
+    offsetH = drawDoubleLines(&painter, offsetW - areamargin,offsetH, printAreaW - offsetW + areamargin, offsetH);
+}
+
+void BE_PurWindow::on_printPushButton_clicked(){
+
+    QPrinter printer;
+    printer.setPaperSize(QPrinter::A4);
+    printer.setOrientation(QPrinter::Landscape);
+    QPrintPreviewDialog preview(&printer, this);
+    preview.setWindowFlags ( Qt::Window );
+    connect(&preview, SIGNAL(paintRequested(QPrinter *)), SLOT(print(QPrinter *)));
+    preview.exec();
 }

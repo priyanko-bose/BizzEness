@@ -40,7 +40,7 @@ public:
     BE_PurchaseManager();
     ~BE_PurchaseManager();
     errorType setItem(unsigned int , int , string );
-    errorType updateItem(unsigned int , int , string );
+    errorType updateItem(unsigned int , int , string, int );
     errorType addNewItem(unsigned int );
     errorType saveItems();
     errorType deleteItem(unsigned int );

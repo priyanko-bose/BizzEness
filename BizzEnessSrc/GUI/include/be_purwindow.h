@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QMap>
+#include <QPrinter>
 #include "common/include/common.h"
 
 namespace Ui {
@@ -33,9 +34,11 @@ private:
     void on_productListButtonBox_rejected();
     void on_purMemoUIButtonBox_accepted();
     void on_purMemoUIButtonBox_rejected();
+    void on_printPushButton_clicked();
+    void on_purTableWidget_cellChanged(int, int);
 
 public slots:
-    void on_purTableWidget_cellChanged(int, int);
+    void print(QPrinter *printer);
 };
 #endif // BE_PURWINDOW_H
 

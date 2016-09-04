@@ -113,7 +113,7 @@ errorType BE_SumManager::setItem(int key, int itemno, string val)
  * This function sets the fields of a Summary table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_SumManager::updateItem(unsigned int key, int itemno, string val)
+errorType BE_SumManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
 {
     return setItem(key,itemno, val);
 }

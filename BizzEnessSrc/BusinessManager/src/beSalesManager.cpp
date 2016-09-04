@@ -118,7 +118,7 @@ errorType BE_SalesManager::setItem(int key, int itemno, string val)
  * This function sets the fields of a Sales table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_SalesManager::updateItem(unsigned int key, int itemno, string val)
+errorType BE_SalesManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
 {
     return setItem(key,itemno, val);
 }

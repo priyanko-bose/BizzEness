@@ -14,8 +14,20 @@ typedef vector <matrow> matrix;
 const static int tableHeaderH = 70;
 const static int topLeftX = 5;
 const static int topLeftY = 5;
-const static int space = 5;
-const static int row_per_page = 7;
+const static int linespace = 5;
+const static int areamargin = 5;
+const static int row_per_page = 10;
+const static int maxFontHeight = 20;
+const char * const myCompanyName = "ABC PVt. Ltd.";
+const char * const myCompanyAddr = "AC 16/3 D B Nagar Kolkata-59";
+const char * const myCompanyPhone = "(033)25766253";
+const char * const myCcompanyEmail = "Email: abc@abc.com";
+
+enum updateOP{
+    SUB = -1,
+    NOOP = 0,
+    ADD = 1
+};
 
 enum status{
     NO_OP=0,
@@ -188,6 +200,7 @@ const char * const table_ui_fields[9][13] = {
     {"" },
     {""},
 } ;
+
 errorType openLogFile();
 void closeFile();
 #endif

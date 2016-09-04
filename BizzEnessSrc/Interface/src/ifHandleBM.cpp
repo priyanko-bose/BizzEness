@@ -46,22 +46,22 @@ void deinitializeBManager()
  * It takes the table name to update, the table entry identified by id and column
  * and the data to be used for update
  */
-errorType updateToBusinessManager(tableType tableId, unsigned  int id, int col, string data)
+errorType updateToBusinessManager(tableType tableId, unsigned  int id, int col, string data, int updateOP)
 {
     errorType errorCode = ERR_NONE;
     BE_BusinessManager *beMangObj = BE_BusinessManager::getInstance();
     if(tableId == TABLE_STOCK)
-        (beMangObj->getStockManager())->updateItem(id, col,data);
+        (beMangObj->getStockManager())->updateItem(id, col,data, updateOP);
     else if(tableId == TABLE_PURCHASE)
-        (beMangObj->getPurchaseManager())->updateItem(id, col,data);
+        (beMangObj->getPurchaseManager())->updateItem(id, col,data, updateOP);
     else if(tableId == TABLE_SALES)
-        (beMangObj->getSalesManager())->updateItem(id, col,data);
+        (beMangObj->getSalesManager())->updateItem(id, col,data, updateOP);
     else if(tableId == TABLE_PL)
-        (beMangObj->getPLManager())->updateItem(id, col,data);
+        (beMangObj->getPLManager())->updateItem(id, col,data, updateOP);
     else if(tableId == TABLE_CASHFLOW)
-        (beMangObj->getCashflowManager())->updateItem(id, col,data);
+        (beMangObj->getCashflowManager())->updateItem(id, col,data, updateOP);
     else if(tableId == TABLE_SUMMARY)
-        (beMangObj->getSumManager())->updateItem(id, col,data);
+        (beMangObj->getSumManager())->updateItem(id, col,data, updateOP);
     else
     {
         fout <<"error("<<ERR_TABLENAME<<"):ifcommon.cpp:updateToBusinessManager: no table_name matched for update" << endl;

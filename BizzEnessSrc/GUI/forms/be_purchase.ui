@@ -494,6 +494,13 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="3">
+       <widget class="QPushButton" name="printPushButton">
+        <property name="text">
+         <string>Print Memo</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>

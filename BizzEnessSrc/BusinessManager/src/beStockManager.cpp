@@ -128,7 +128,7 @@ errorType BE_StockManager::setItem(unsigned int key, int itemno, string val)
  * This function updates the fields of a stock table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_StockManager::updateItem(unsigned int key, int itemno, string val)
+errorType BE_StockManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
 {
     //get the stock table entry
     if(this->stockTable.find(key) == this->stockTable.end()){
@@ -159,14 +159,14 @@ errorType BE_StockManager::updateItem(unsigned int key, int itemno, string val)
             stockData.expDate = val.c_str();
             break;
         case PROD_NOB:
-            stockData.noOfBoxes = stockData.noOfBoxes + atoi(val.c_str());
+            stockData.noOfBoxes = stockData.noOfBoxes + atoi(val.c_str()) * updateQ;
             break;
         case PROD_NOI:
-            stockData.noOfItems = stockData.noOfItems + atoi(val.c_str());
-            stockData.noOfTotItems = stockData.noOfTotItems + atoi(val.c_str());
+            stockData.noOfItems = stockData.noOfItems + atoi(val.c_str()) * updateQ;
+            stockData.noOfTotItems = stockData.noOfTotItems + atoi(val.c_str()) * updateQ;
             break;
         case PROD_NOTI:
-            stockData.noOfTotItems = stockData.noOfTotItems + atoi(val.c_str());
+            stockData.noOfTotItems = stockData.noOfTotItems + atoi(val.c_str()) * updateQ;
             break;
         case PROD_CPB:
             stockData.cost_per_box = atof(val.c_str());

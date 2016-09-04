@@ -150,34 +150,35 @@ errorType importTableData(string path)
 errorType populatePurWindowData(unsigned int *id, int flds , string data)
 {
     errorType errorCode = ERR_NONE;
+    updateOP stockOP = ADD;
     switch(flds){
     case PURUI_NAME:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_PROD, data);
-        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NAME, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NAME, data, stockOP);
         break;
     case PURUI_BATCH:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_BATCH, data);
-        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_BATCH, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_BATCH, data, stockOP);
         break;
     case PURUI_BOXNO:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_BOX, data);
-        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NOB, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NOB, data, stockOP);
         break;
     case PURUI_PCSNO:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_ITEMS, data);
-        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NOI, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_NOI, data, stockOP);
         break;
     case PURUI_PCSPERBOX:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_PCSPERBOX, data);
-        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_PPB, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_PPB, data, stockOP);
         break;
     case PURUI_COSTOFBOX:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_COSTOFBOX, data);
-        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_CPB, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_CPB, data, stockOP);
         break;
     case PURUI_COSTOFPCS:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_COSTOFPCS, data);
-        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_CPP, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_CPP, data, stockOP);
         break;
     case PURUI_TAX:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_TAX, data);
@@ -208,11 +209,11 @@ errorType populatePurWindowData(unsigned int *id, int flds , string data)
         break;
     case PURUI_DATE:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_DATE, data);
-        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_DATE, data);
+        updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_DATE, data, stockOP);
         break;
     case PURUI_COMP:
        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_SUPP, data);
-       updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_COMP, data);
+       updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_COMP, data, stockOP);
         break;
     case PURUI_ADDR:
        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_SUPPADDR, data);

@@ -118,7 +118,7 @@ errorType BE_CashflowManager::setItem(int key, int itemno, string val)
  * This function sets the fields of a CashFlow table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_CashflowManager::updateItem(unsigned int key, int itemno, string val)
+errorType BE_CashflowManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
 {
     return setItem(key,itemno, val);
 }

@@ -46,6 +46,33 @@ void printHeader(QPainter *painter, QPrinter *printer, QString &tableName){
     painter->restore();
 }
 
+int drawDoubleLines(QPainter *painter, int topLX, int topLY, int btmRX, int btmRY)
+{
+    QPen pen( Qt::black );
+    pen.setStyle( Qt::DashLine );
+    painter->save();
+    painter->setPen(pen);
+    painter->drawLine(QPoint(topLX,topLY), QPoint(btmRX, btmRY));
+    topLY = topLY + linespace;
+    btmRY = btmRY + linespace;
+    painter->drawLine(QPoint(topLX,topLY), QPoint(btmRX, btmRY));
+    painter->restore();
+    return topLY;
+}
+
+int printLine(QPainter *painter, QPoint point,
+                    QString text, QString fontName, int fontSize)
+{
+    painter->save();
+    QFont font(fontName);
+    font.setPointSize(fontSize);
+    painter->setFont( font );
+    painter->drawText(point,text);
+    painter->restore();
+    int printAreaHOffset = point.y() + font.pixelSize() + linespace;
+    return printAreaHOffset;
+}
+
 int getTableAreaWidth(QTableView *pTableView, int colCount, int vHeaderWidth){
     int width = 0;
     for( int i = 0; i < colCount; ++i ) {
@@ -69,10 +96,10 @@ void adjustPainterScale(QPainter *painter, QPrinter *printer, int width, int hei
     int printAreaW = printer->pageRect().width();
     int printAreaH = printer->pageRect().height();
     double xscale = (printAreaW - (topLeftX*2))/double(width);
-    double yscale = (printAreaH - (topLeftY + tableHeaderH + space))/double(height);
+    double yscale = (printAreaH - (topLeftY + tableHeaderH + linespace))/double(height);
     double scale =   qMin(xscale, yscale);
 
-    painter->translate(qreal(topLeftX), qreal(topLeftY + tableHeaderH + space));
+    painter->translate(qreal(topLeftX), qreal(topLeftY + tableHeaderH + linespace));
     painter->scale(double(int(scale * 100)/100.0), double(int(scale * 100)/100.0));
 }
 

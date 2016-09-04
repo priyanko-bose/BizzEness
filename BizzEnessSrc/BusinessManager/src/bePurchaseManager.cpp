@@ -178,7 +178,7 @@ errorType BE_PurchaseManager::setItem(unsigned int key, int itemno, string val)
  * This function sets the fields of a Purchase table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_PurchaseManager::updateItem(unsigned int key, int itemno, string val)
+errorType BE_PurchaseManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
 {
     return setItem(key,itemno, val);
 }

@@ -60,7 +60,7 @@ public:
     BE_PLManager();
     ~BE_PLManager();
     errorType setItem(int , int , string );
-    errorType updateItem(unsigned int , int , string );
+    errorType updateItem(unsigned int , int , string, int );
     errorType addNewItem(int );
     errorType saveItems();
     errorType deleteItem(int );
