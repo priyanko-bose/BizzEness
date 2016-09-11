@@ -39,6 +39,7 @@ private:
 
 public slots:
     void print(QPrinter *printer);
+    void on_currentIndexChanged_clicked(int);
 };
 #endif // BE_PURWINDOW_H
 

@@ -22,6 +22,16 @@ BE_PurWindow::BE_PurWindow(QWidget *parent):
     initializeSignalsSlots();
     initColumnNameValueMap();
     QListWidget *list = memoUi->prodListWidget;
+
+    QStringList *comps = getCompanyList();
+    if(comps){
+        memoUi->companyComboBox->addItems(*comps);
+        memoUi->companyComboBox->setCurrentIndex(0);
+        delete comps;
+        comps = '\0';
+    }
+    QStringList *compProds = getFilteredList(TABLE_STOCK, PROD_COMP, PROD_NAME,memoUi->companyComboBox->itemText(0));
+
     QStringList *items = getProductList();
     if(items){
         list->addItems(*items);
@@ -34,8 +44,31 @@ BE_PurWindow::BE_PurWindow(QWidget *parent):
         {
             QListWidgetItem *item = list->item(row);
             item->setCheckState( Qt::Unchecked );
+            QRegularExpression re("(.*)\\((\\S+)\\)$");
+            QRegularExpressionMatch match = re.match(item->text());
+            QString prodname;
+            if (match.hasMatch()) {
+                prodname = match.captured(1); // extract product name
+                if(!compProds->contains(prodname))
+                    item->setHidden(true);
+                else
+                    item->setHidden(false);
+            }
+
         }
     }
+    if(compProds){
+        delete compProds;
+        compProds='\0';
+    }
+    QString *compAddr = '\0';
+    compAddr = getTableItem(TABLE_PURCHASE, PUR_SUPP, memoUi->companyComboBox->itemText(0), PUR_SUPPADDR);
+    if(compAddr){
+        memoUi->addrTextEdit->setPlainText(*compAddr);
+        delete compAddr;
+        compAddr='\0';
+    }
+    connect(memoUi->companyComboBox, SIGNAL(currentIndexChanged(int)),this,SLOT(on_currentIndexChanged_clicked(int)));
 }
 
 /*
@@ -112,6 +145,7 @@ void BE_PurWindow::initializeSignalsSlots()
     connect(memoUi->purMemoUIButtonBox,&QDialogButtonBox::rejected,this,&BE_PurWindow::on_purMemoUIButtonBox_rejected);
     connect(memoUi->purTableWidget,&QTableWidget::cellChanged,this,&BE_PurWindow::on_purTableWidget_cellChanged);
     connect(memoUi->printPushButton,&QPushButton::clicked,this,&BE_PurWindow::on_printPushButton_clicked);
+
 }
 
 
@@ -252,6 +286,48 @@ void BE_PurWindow::on_productListButtonBox_rejected()
 }
 
 /*
+ * When company list items are selected/ chganged
+ */
+void BE_PurWindow::on_currentIndexChanged_clicked(int index)
+{
+    QStringList *compProds = getFilteredList(TABLE_STOCK, PROD_COMP, PROD_NAME,memoUi->companyComboBox->itemText(index));
+
+    QListWidget *list = memoUi->prodListWidget;
+
+    if(int totaItems = list->count())
+    {
+        for(int row=0; row < totaItems; row++)
+        {
+            QListWidgetItem *item = list->item(row);
+            item->setCheckState( Qt::Unchecked );
+            QRegularExpression re("(.*)\\((\\S+)\\)$");
+            QRegularExpressionMatch match = re.match(item->text());
+            QString prodname;
+            if (match.hasMatch()) {
+                prodname = match.captured(1); // extract product name
+                if(!compProds->contains(prodname))
+                    item->setHidden(true);
+                else
+                    item->setHidden(false);
+            }
+
+        }
+    }
+    if(compProds){
+        delete compProds;
+        compProds='\0';
+    }
+    QString *compAddr = '\0';
+    compAddr = getTableItem(TABLE_PURCHASE, PUR_SUPP, memoUi->companyComboBox->itemText(index), PUR_SUPPADDR);
+    if(compAddr){
+        memoUi->addrTextEdit->setPlainText(*compAddr);
+        delete compAddr;
+        compAddr='\0';
+    }
+
+}
+
+/*
  * ---------------------------------------------------------------------------------------
  * This SLOTS are called when purchase memo are accepted or rejected
  *----------------------------------------------------------------------------------------
@@ -310,7 +386,7 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
             populatePurWindowData(uniqueIds, PURUI_DATE,
                memoUi->dateEdit->text().trimmed().toStdString());
             populatePurWindowData(uniqueIds, PURUI_COMP,
-               memoUi->companyLineEdit->text().trimmed().toStdString());
+               memoUi->companyComboBox->lineEdit()->text().trimmed().toStdString());
             populatePurWindowData(uniqueIds, PURUI_ADDR,
                memoUi->addrTextEdit->toPlainText().trimmed().toStdString());
             populatePurWindowData(uniqueIds, PURUI_CONTACT,
@@ -361,7 +437,7 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
                 }
                 else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][6])
                 {
-                    data->setText(memoUi->companyLineEdit->text().trimmed());
+                    data->setText(memoUi->companyComboBox->lineEdit()->text().trimmed());
                     curTable->setItem(row,col, data);
                 }
                 else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][7])
@@ -552,7 +628,7 @@ void BE_PurWindow::print(QPrinter *printer)
               "Times New Roman", maxFontHeight * 0.6) + linespace;
 
     rect = QRect(QPoint(offsetW,offsetH),QPoint(printAreaW - offsetW, offsetH + maxFontHeight));
-    offsetH = printLine(&painter, rect.bottomLeft(), "Company Name: " + memoUi->companyLineEdit->text(),
+    offsetH = printLine(&painter, rect.bottomLeft(), "Company Name: " + memoUi->companyComboBox->lineEdit()->text(),
               "Helvetica", maxFontHeight * 0.9) + linespace;
 
     rect = QRect(QPoint(offsetW,offsetH),QPoint(printAreaW - offsetW, offsetH + maxFontHeight));

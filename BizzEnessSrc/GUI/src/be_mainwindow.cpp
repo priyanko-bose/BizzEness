@@ -710,6 +710,7 @@ void BE_MainWindow::on_signalUpdateStockTable(matrow *record)
 {
     QTableWidget *stockTable = BE_MainWindow::getBeMainWindow()->getStockTable();
     int rowCount = stockTable->rowCount();
+    int found = 0;
     for(int iter=0; iter < rowCount; iter++)
     {
         unsigned int id = atol(record->at(PROD_ID).c_str());
@@ -724,11 +725,24 @@ void BE_MainWindow::on_signalUpdateStockTable(matrow *record)
                 }
                 stockTable->item(iter,col)->setText(QString::fromStdString(record->at(col)));
             }
+            found = 1;
             break;
         }
         else
             continue;
 
+    }
+    if(!found){
+        int rows = stockTable->rowCount();
+        stockTable->insertRow(rows);
+        for(int col = PROD_ID; col < PROD_END; col++)
+        {
+            if(!stockTable->item(rows,col)){
+                QTableWidgetItem *item = new QTableWidgetItem();
+                stockTable->setItem(rows, col, item);
+            }
+            stockTable->item(rows,col)->setText(QString::fromStdString(record->at(col)));
+        }
     }
     isStockTableEdited = false;
     BE_MainWindow::getBeMainWindow()->diableSaveCancel();

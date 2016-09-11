@@ -474,3 +474,21 @@ errorType BE_PurchaseManager:: deleteAllItems()
     purchaseTable.clear();
     return ERR_NONE;
 }
+
+errorType BE_PurchaseManager::getItemText(int searchFld, string searchFldText, int requireFld, string *sText)
+{
+    map <unsigned int, purchaseData_t> & mymap = this->getPurchaseTable();
+    if(!mymap.empty())
+    {
+        for (map<unsigned int,purchaseData_t>::reverse_iterator rit=mymap.rbegin(); rit!=mymap.rend(); ++rit){
+            string searchItem = this->getElement(rit->second, searchFld);
+            if(searchItem == searchFldText){
+                *sText = this->getElement(rit->second, requireFld);
+                break;
+            }
+            else
+                continue;
+        }
+    }
+    return ERR_NONE;
+}

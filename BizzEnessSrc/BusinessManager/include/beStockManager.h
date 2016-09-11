@@ -44,6 +44,8 @@ public:
     map <unsigned int, stockData_t> & getStockTable();
     const char * getElement(stockData_t &, int );
     list<string> *getStockProductList();
+    list<string> *getStockCompanyList();
+    list<string> * getFilteredList(int ,int , string );
     int totItems;
  private:
     map <unsigned int, stockData_t> stockTable;

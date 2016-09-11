@@ -41,6 +41,69 @@ QStringList *getProductList()
 }
 
 /*
+ * This returns the complete list of product names
+ */
+QStringList *getCompanyList()
+{
+    list<string>::iterator it;
+    QStringList *compList = '\0';
+    BE_BusinessManager *beBusinessManagerObj = 0;
+    beBusinessManagerObj = BE_BusinessManager::getInstance();
+    if(!beBusinessManagerObj)
+        return compList;
+    if(list<string> *mylist = beBusinessManagerObj->getStockManager()->getStockCompanyList())
+    {
+        compList = new QStringList();
+        for (it=mylist->begin(); it!=mylist->end(); ++it){
+            *compList << QString((*it).c_str()) ;
+        }
+        delete mylist;
+        mylist='\0';
+    }
+    return compList;
+}
+
+QStringList * getFilteredList(int tableID, int filterBy, int filterOn, QString filterText)
+{
+    list<string>::iterator it;
+    QStringList *listItems = '\0';
+    BE_BusinessManager *beBusinessManagerObj = 0;
+    list<string> *mylist = '\0';
+    beBusinessManagerObj = BE_BusinessManager::getInstance();
+    if(!beBusinessManagerObj)
+        return listItems;
+    if(tableID == TABLE_STOCK){
+       mylist = beBusinessManagerObj->getStockManager()->getFilteredList(filterBy,filterOn, filterText.toStdString());
+    }
+    if(mylist)
+    {
+        listItems = new QStringList();
+        for (it=mylist->begin(); it!=mylist->end(); ++it){
+            *listItems << QString((*it).c_str()) ;
+        }
+        delete mylist;
+        mylist='\0';
+    }
+    return listItems;
+}
+
+QString * getTableItem(int tableID, int searchFld, QString searchFldText, int requireFld)
+{
+    BE_BusinessManager *beBusinessManagerObj = 0;
+    beBusinessManagerObj = BE_BusinessManager::getInstance();
+    if(!beBusinessManagerObj)
+        return '\0';
+    QString * itemText = '\0';
+    string rqrText;
+    if(tableID == TABLE_PURCHASE){
+       int err = 0;
+       if(!(err = beBusinessManagerObj->getPurchaseManager()->getItemText(searchFld,searchFldText.toStdString(),requireFld, &rqrText)))
+           itemText = new QString(QString::fromStdString(rqrText));
+    }
+    return itemText;
+}
+
+/*
  * This function is used to Initialize GUI
  */
 errorType initializeGUI(int argc , char *argv[])

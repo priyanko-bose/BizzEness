@@ -438,7 +438,7 @@ list<string> *BE_StockManager::getStockProductList()
     {
         prodList = new list<string>();
         for (map<unsigned int,stockData_t>::iterator it=mymap.begin(); it!=mymap.end(); ++it){
-            string item = it->second.productName;
+            string item = this->getElement(it->second, PROD_NAME);
             if(!item.empty()){
                 item = item + "(" +it->second.batchNo +")";
                 prodList->push_back(item);
@@ -446,4 +446,51 @@ list<string> *BE_StockManager::getStockProductList()
         }
     }
     return prodList;
+}
+
+/*
+ * This returns the complete list of company names
+ */
+list<string> *BE_StockManager::getStockCompanyList()
+{
+    list<string> *compList =  '\0';
+    map <unsigned int, stockData_t> & mymap = this->stockTable;
+    if(!mymap.empty())
+    {
+        compList = new list<string>();
+        for (map<unsigned int,stockData_t>::iterator it=mymap.begin(); it!=mymap.end(); ++it){
+            string item = this->getElement(it->second, PROD_COMP);
+            if(!item.empty()){
+                compList->push_back(item);
+            }
+        }
+        compList->sort();
+        compList->unique();
+    }
+    return compList;
+}
+
+/*
+ * This returns the list of filtered items
+ */
+list<string> * BE_StockManager::getFilteredList(int filterBy,int filterOn, string filterText)
+{
+    list<string> *listItems =  '\0';
+    map <unsigned int, stockData_t> & mymap = this->stockTable;
+    if(!mymap.empty())
+    {
+        listItems = new list<string>();
+        for (map<unsigned int,stockData_t>::iterator it=mymap.begin(); it!=mymap.end(); ++it){
+            string itemBy = this->getElement(it->second, filterBy);
+            if(itemBy == filterText){
+                string itemOn = this->getElement(it->second, filterOn);
+                if(!itemOn.empty()){
+                    listItems->push_back(itemOn);
+                }
+            }
+            else
+                continue;
+        }
+    }
+    return listItems;
 }
