@@ -14,7 +14,7 @@
 #include "Interface/include/ifHandleGUI.h"
 
 ofstream fout;
-int isAdmin = 0;
+int isAdmin = 1;
 //Application Entry Point
 int main(int argc, char *argv[])
 {

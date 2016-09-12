@@ -141,6 +141,9 @@ void BE_PurWindow::initializeSignalsSlots()
     connect(memoUi->purMemoUIButtonBox,&QDialogButtonBox::rejected,this,&BE_PurWindow::on_purMemoUIButtonBox_rejected);
     connect(memoUi->purTableWidget,&QTableWidget::cellChanged,this,&BE_PurWindow::on_purTableWidget_cellChanged);
     connect(memoUi->printPushButton,&QPushButton::clicked,this,&BE_PurWindow::on_printPushButton_clicked);
+    connect(memoUi->totalExpenseLineEdit,&QLineEdit::textEdited,this,&BE_PurWindow::on_totalItemsTextEdited_clicked);
+    connect(memoUi->paidByCash,&QLineEdit::textEdited,this,&BE_PurWindow::on_totalItemsTextEdited_clicked);
+    connect(memoUi->paidByCheque,&QLineEdit::textEdited,this,&BE_PurWindow::on_totalItemsTextEdited_clicked);
 
 }
 
@@ -154,11 +157,11 @@ void BE_PurWindow::on_purAddPushButton_clicked()
    int count = memoUi->purTableWidget->rowCount();
    memoUi->purTableWidget->insertRow(count);
 
-   QTableWidgetItem *tItem = new QTableWidgetItem();
-   tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
-   memoUi->purTableWidget->setItem(count, getColID(PURUI_TAX), tItem);
+   BE_QTableWidgetItem *ctItem = new BE_QTableWidgetItem();
+   ctItem->setFlags(ctItem->flags() & ~Qt::ItemIsEditable);
+   memoUi->purTableWidget->setItem(count, getColID(PURUI_TAX), ctItem);
 
-   tItem = new QTableWidgetItem();
+   QTableWidgetItem *tItem = new QTableWidgetItem();
    tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
    memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTAL), tItem);
 
@@ -166,8 +169,8 @@ void BE_PurWindow::on_purAddPushButton_clicked()
    cItem->setEditable(true);
    cItem->addItem(QString("4.5"));
    cItem->addItem(QString("12.5"));
-   memoUi->purTableWidget->setCellWidget(count, getColID(PURUI_TAXPER), cItem);
-
+   connect(cItem,SIGNAL(currentTextChanged(const QString &)),ctItem,SLOT(on_taxComboBox_TextChanged(const QString &)));
+   memoUi->purTableWidget->setCellWidget(count,getColID(PURUI_TAXPER),cItem);
 }
 /*
  * This function deletes a row at the products table
@@ -224,19 +227,7 @@ void BE_PurWindow::on_productListButtonBox_accepted()
                 }
                 int count = memoUi->purTableWidget->rowCount();
                 memoUi->purTableWidget->insertRow(count);
-#ifdef priyanko
-                QTableWidgetItem *tItem = new QTableWidgetItem();
-                tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
-                memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALCOST), tItem);
 
-                tItem = new QTableWidgetItem();
-                tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
-                memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALPAID), tItem);
-
-                tItem = new QTableWidgetItem();
-                tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
-                memoUi->purTableWidget->setItem(count, getColID(PURUI_DUE), tItem);
-#endif
                 QTableWidgetItem * tItem = new QTableWidgetItem();
                 tItem->setText(prodname);
                 memoUi->purTableWidget->setItem(count,getColID(PURUI_NAME),tItem);
@@ -260,6 +251,20 @@ void BE_PurWindow::on_productListButtonBox_accepted()
                 tItem->setText(QString::fromStdString(record->at(PROD_PPB)));
                 memoUi->purTableWidget->setItem(count,getColID(PURUI_PCSPERBOX),tItem);
 
+                BE_QTableWidgetItem *ctItem = new BE_QTableWidgetItem();
+                ctItem->setFlags(ctItem->flags() & ~Qt::ItemIsEditable);
+                memoUi->purTableWidget->setItem(count, getColID(PURUI_TAX), ctItem);
+
+                tItem = new QTableWidgetItem();
+                tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
+                memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTAL), tItem);
+
+                QComboBox *cItem = new QComboBox();
+                cItem->setEditable(true);
+                cItem->addItem(QString("4.5"));
+                cItem->addItem(QString("12.5"));
+                connect(cItem,SIGNAL(currentTextChanged(const QString &)),ctItem,SLOT(on_taxComboBox_TextChanged(const QString &)));
+                memoUi->purTableWidget->setCellWidget(count,getColID(PURUI_TAXPER),cItem);
                 if(record){
                     delete record;
                     record = '\0';
@@ -327,6 +332,33 @@ void BE_PurWindow::on_currentIndexChanged_clicked(int index)
 
 }
 
+void BE_PurWindow::on_totalItemsTextEdited_clicked()
+{
+    double grandtotal=0.0, paid = 0.0, totalpaid = 0.0, totaldue = 0.0;
+    if(!memoUi->totalTaxLineEdit->text().isEmpty())
+        grandtotal = grandtotal + memoUi->totalTaxLineEdit->text().toDouble();
+    if(!memoUi->totalCostLineEdit->text().isEmpty())
+        grandtotal = grandtotal + memoUi->totalCostLineEdit->text().toDouble();
+
+    if(!memoUi->totalExpenseLineEdit->text().isEmpty())
+        grandtotal = grandtotal + memoUi->totalExpenseLineEdit->text().toDouble();
+
+    if(!memoUi->paidByCash->text().isEmpty()){
+        paid = memoUi->paidByCash->text().toDouble();
+        totalpaid = totalpaid + paid;
+    }
+
+     if(!memoUi->paidByCheque->text().isEmpty()){
+         paid = memoUi->paidByCheque->text().toDouble();
+         totalpaid = totalpaid + paid;
+     }
+     totaldue = grandtotal - totalpaid;
+
+     memoUi->totalPaidLineEdit->setText(QString::number(totalpaid));
+     memoUi->grandTotalLineEdit->setText(QString::number(grandtotal));
+     memoUi->totalDueLineEdit->setText(QString::number(totaldue));
+}
+
 /*
  * ---------------------------------------------------------------------------------------
  * This SLOTS are called when purchase memo are accepted or rejected
@@ -336,30 +368,26 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
 {
     QTableWidget *curTable = BE_MainWindow::getBeMainWindow()->getPurchaseTable();
     int rowCount = memoUi->purTableWidget->rowCount();
+    QString billNo = memoUi->billNoLineEdit->text().trimmed(); //get the bill no
+    QString date = memoUi->dateEdit->text().trimmed();   //get the date
+    QString purNo = memoUi->purNoLineEdit->text().trimmed(); //get the purchase number
+
     for(int rowi =0 ;rowi<rowCount; rowi++)
     {
         QString prodName = "";
         QString batchNo = "";
-        QString billNo = "";
-        QString date = "";
         unsigned int uniqueIds [10] = {0,0,0,0,0,0,0,0,0,0};
-        QTableWidgetItem *item = '\0';
+        QTableWidgetItem *itemP = '\0', *itemB = '\0';
         matrow *record = '\0';
-        item = memoUi->purTableWidget->item(rowi, getColID(PURUI_NAME));
-        if(item)
+        itemP = memoUi->purTableWidget->item(rowi, getColID(PURUI_NAME));
+        itemB = memoUi->purTableWidget->item(rowi, getColID(PURUI_BATCH));
+        if(itemP && itemB)
         {
-            prodName = item->text().trimmed(); //get product name
-            item = '\0';
-            item = memoUi->purTableWidget->item(rowi, getColID(PURUI_BATCH));
-            if(item)
-                batchNo = item->text().trimmed(); //get product batch no.
-            item = '\0';
-            billNo = memoUi->billNoLineEdit->text().trimmed(); //get the bill no
-            date = memoUi->dateEdit->text().trimmed();  //get the date
-            QString purNo = memoUi->purNoLineEdit->text().trimmed();
+            prodName = itemP->text().trimmed(); //get product name
+            batchNo = itemB->text().trimmed(); //get product batch no.
 
             /* Update business manager -- start*/
-            uniqueIds[TABLE_PURCHASE] = hashCode(prodName + batchNo + billNo + date);
+            uniqueIds[TABLE_PURCHASE] = hashCode(prodName + purNo + billNo + date);
             addItemToBusinessManager(TABLE_PURCHASE,uniqueIds[TABLE_PURCHASE]);
 
             uniqueIds[TABLE_STOCK] = hashCode(prodName + batchNo);
@@ -410,67 +438,6 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
                memoUi->remarksTextEdit->toPlainText().trimmed().toStdString());
             /* Update business manager -- end*/
 
-            /* Update UI -- start*/
-            int row = curTable->rowCount();
-            curTable->insertRow(row);
-            for (int col = 0; col < curTable->columnCount(); col++)
-            {
-                QTableWidgetItem *data = new QTableWidgetItem();
-                if(!isAdmin || col == PUR_ID)
-                     data->setFlags(data->flags() & ~Qt::ItemIsEditable);
-                if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][0])
-                {
-                    data->setText(QString::number(uniqueIds[TABLE_PURCHASE]));
-                    curTable->setItem(row,col, data);
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][1])
-                {
-                    data->setText(purNo);
-                    curTable->setItem(row,col, data);
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][2])
-                {
-                    data->setText(memoUi->dateEdit->text().trimmed());
-                    curTable->setItem(row,col, data);
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][3])
-                {
-                    data->setText(memoUi->billNoLineEdit->text().trimmed());
-                    curTable->setItem(row,col, data);
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][4])
-                {
-                    data->setText(batchNo);
-                    curTable->setItem(row,col, data);
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][5])
-                {
-                    data->setText(memoUi->companyComboBox->lineEdit()->text().trimmed());
-                    curTable->setItem(row,col, data);
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][6])
-                {
-                    data->setText(memoUi->grandTotalLineEdit->text().trimmed());
-                    curTable->setItem(row,col, data);
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][7])
-                {
-                    data->setText(memoUi->totalPaidLineEdit->text().trimmed());
-                    curTable->setItem(row,col, data);
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][8])
-                {
-                    data->setText(memoUi->totalDueLineEdit->text().trimmed());
-                    curTable->setItem(row,col, data);
-                }
-                else{
-                    continue;
-                }
-                if(curTable->item(row,col))
-                    curTable->item(row,col)->setToolTip(curTable->item(row,col)->text());
-            }
-            /* Update UI -- end*/
-
             /* Update Database -- start*/
             prepareRecord(TABLE_PURCHASE, uniqueIds[TABLE_PURCHASE], &record);
             saveRecordInDB(TABLE_PURCHASE, uniqueIds[TABLE_PURCHASE], record);
@@ -486,6 +453,7 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
             else{
                 saveRecordInDB(TABLE_STOCK, uniqueIds[TABLE_STOCK], record);
             }
+
             emit BE_MainWindow::getBeMainWindow()->signalUpdateStockTable(record);
             /* Update Database -- end*/
             if(record){
@@ -496,6 +464,63 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
         else
            continue;
     }
+    /* Update UI -- start*/
+    QString hashText = purNo + date + billNo;
+    unsigned int hashValue = hashCode(hashText);
+    int row = curTable->rowCount();
+    curTable->insertRow(row);
+    for (int col = 0; col < curTable->columnCount(); col++)
+    {
+        QTableWidgetItem *data = new QTableWidgetItem();
+        if(!isAdmin || col == PUR_ID)
+             data->setFlags(data->flags() & ~Qt::ItemIsEditable);
+        if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][0])
+        {
+            data->setText(QString::number(hashValue));
+            curTable->setItem(row,col, data);
+        }
+        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][1])
+        {
+            data->setText(purNo);
+            curTable->setItem(row,col, data);
+        }
+        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][2])
+        {
+            data->setText(memoUi->dateEdit->text().trimmed());
+            curTable->setItem(row,col, data);
+        }
+        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][3])
+        {
+            data->setText(memoUi->billNoLineEdit->text().trimmed());
+            curTable->setItem(row,col, data);
+        }
+        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][4])
+        {
+            data->setText(memoUi->companyComboBox->lineEdit()->text().trimmed());
+            curTable->setItem(row,col, data);
+        }
+        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][5])
+        {
+            data->setText(memoUi->grandTotalLineEdit->text().trimmed());
+            curTable->setItem(row,col, data);
+        }
+        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][6])
+        {
+            data->setText(memoUi->totalPaidLineEdit->text().trimmed());
+            curTable->setItem(row,col, data);
+        }
+        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][7])
+        {
+            data->setText(memoUi->totalDueLineEdit->text().trimmed());
+            curTable->setItem(row,col, data);
+        }
+        else{
+            continue;
+        }
+        if(curTable->item(row,col))
+            curTable->item(row,col)->setToolTip(curTable->item(row,col)->text());
+    }
+    /* Update UI -- end*/
     BE_MainWindow::getBeMainWindow()->diableSaveCancel();
     BE_MainWindow::getBeMainWindow()->isStockTableEdited = false;
     BE_MainWindow::getBeMainWindow()->isPurchaseTableEdited = false;
@@ -529,7 +554,7 @@ void BE_PurWindow :: on_purTableWidget_cellChanged(int row, int col){
 
         if(table->item(row, getColID(PURUI_TAX))){
             QComboBox *box = qobject_cast<QComboBox *>(table->cellWidget(row,getColID(PURUI_TAXPER)));
-            double tax;
+            double tax = 0.0;
             if(box)
                 tax = (cost * box->lineEdit()->text().toDouble())/100.0;
             table->item(row,getColID(PURUI_TAX))->setText(QString::number(tax));
@@ -672,15 +697,19 @@ void BE_PurWindow::print(QPrinter *printer)
     offsetH = drawDoubleLines(&painter, offsetW,offsetH,printAreaW - offsetW, offsetH) + linespace;
 
     rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
-    //offsetH = printLine(&painter, rect.bottomLeft(), "Total(incl expn): " + memoUi->totalCostLineEdit->text(),
-   //           "Times New Roman", maxFontHeight * 0.75) + linespace;
+    offsetH = printLine(&painter, rect.bottomLeft(), "Total: " + memoUi->totalCostLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
 
     rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
     offsetH = printLine(&painter, rect.bottomLeft(), "Tax: " + memoUi->totalTaxLineEdit->text(),
               "Times New Roman", maxFontHeight * 0.75) + linespace;
 
     rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
-    offsetH = printLine(&painter, rect.bottomLeft(), "Grand Total(incl expn): " + memoUi->grandTotalLineEdit->text(),
+    offsetH = printLine(&painter, rect.bottomLeft(), "Expenses: " + memoUi->totalExpenseLineEdit->text(),
+              "Times New Roman", maxFontHeight * 0.75) + linespace;
+
+    rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
+    offsetH = printLine(&painter, rect.bottomLeft(), "Grand Total: " + memoUi->grandTotalLineEdit->text(),
               "Times New Roman", maxFontHeight * 0.75) + linespace;
 
     rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
@@ -703,4 +732,10 @@ void BE_PurWindow::on_printPushButton_clicked(){
     preview.setWindowFlags ( Qt::Window );
     connect(&preview, SIGNAL(paintRequested(QPrinter *)), SLOT(print(QPrinter *)));
     preview.exec();
+}
+
+
+void BE_QTableWidgetItem::on_taxComboBox_TextChanged(const QString &text)
+{
+    this->setText(text);
 }

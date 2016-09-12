@@ -52,8 +52,8 @@ BE_MainWindow::BE_MainWindow(QWidget *parent) :
     //Show/Don't Show Purchase Table Unique Id
     ui->purchaseTableWidget->setColumnHidden(0,false);
 
-    ui->purDetailTableWidget->setColumnCount(3);
-    for(int col = 0; col <= 2 ; col++){
+    ui->purDetailTableWidget->setColumnCount(table_ui_no_detail_fields[TABLE_PURCHASE]);
+    for(int col = 0; col <= table_ui_no_detail_fields[TABLE_PURCHASE] ; col++){
         QTableWidgetItem *header1 = new QTableWidgetItem();
         header1->setText(table_ui_detail_fields[TABLE_PURCHASE][col]);
         ui->purDetailTableWidget->setHorizontalHeaderItem(col,header1);
@@ -105,6 +105,7 @@ void BE_MainWindow::initializeSignalsSlots()
 {
     ui->addPushButton->setEnabled(false);
     ui->delPushButton->setEnabled(false);
+    QObject::connect(ui->tablesTabWidget,&QTabWidget::currentChanged,this, &BE_MainWindow::on_tablesTabWidget_tabChanged);
     if(isAdmin){
         ui->addPushButton->setEnabled(true);
         ui->delPushButton->setEnabled(true);
@@ -113,7 +114,6 @@ void BE_MainWindow::initializeSignalsSlots()
         QObject::connect(ui->savePushButton, &QPushButton::clicked, this, &BE_MainWindow::on_savePushButton_clicked);
         QObject::connect(ui->cancelPushButton,&QPushButton::clicked, this, &BE_MainWindow::on_cancelPushButton_clicked);
 
-        QObject::connect(ui->tablesTabWidget,&QTabWidget::currentChanged,this, &BE_MainWindow::on_tablesTabWidget_tabChanged);
         QObject::connect(ui->cashFlowTableWidget,&QTableWidget::cellChanged, this, &BE_MainWindow::on_cashFlowTableWidget_cellChanged);
         QObject::connect(ui->plTableWidget,&QTableWidget::cellChanged, this, &BE_MainWindow::on_plTableWidget_cellChanged);
         QObject::connect(ui->salesTableWidget,&QTableWidget::cellChanged, this, &BE_MainWindow::on_salesTableWidget_cellChanged);

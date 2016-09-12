@@ -30,7 +30,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1004</width>
+     <width>1024</width>
      <height>651</height>
     </rect>
    </property>
@@ -54,7 +54,7 @@
      <widget class="QFrame" name="frame">
       <property name="maximumSize">
        <size>
-        <width>1000</width>
+        <width>1024</width>
         <height>1000</height>
        </size>
       </property>
@@ -216,7 +216,7 @@
      <widget class="QFrame" name="horizontalFrame_2">
       <property name="minimumSize">
        <size>
-        <width>1000</width>
+        <width>1020</width>
         <height>270</height>
        </size>
       </property>
@@ -247,17 +247,43 @@
        </property>
        <item>
         <layout class="QFormLayout" name="formLayout">
+         <item row="1" column="0">
+          <widget class="QPushButton" name="purAddPushButton">
+           <property name="maximumSize">
+            <size>
+             <width>35</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>ADD</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="purDelPushButton">
+           <property name="maximumSize">
+            <size>
+             <width>35</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>DEL</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="0">
           <widget class="QTableWidget" name="purTableWidget">
            <property name="minimumSize">
             <size>
-             <width>995</width>
+             <width>1015</width>
              <height>240</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>1000</width>
+             <width>1020</width>
              <height>240</height>
             </size>
            </property>
@@ -326,32 +352,6 @@
              <string>Tax%</string>
             </property>
            </column>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QPushButton" name="purAddPushButton">
-           <property name="maximumSize">
-            <size>
-             <width>35</width>
-             <height>35</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>ADD</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="purDelPushButton">
-           <property name="maximumSize">
-            <size>
-             <width>35</width>
-             <height>35</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>DEL</string>
-           </property>
           </widget>
          </item>
         </layout>

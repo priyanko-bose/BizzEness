@@ -360,9 +360,9 @@ errorType populateSavedData()
         vector<unsigned int> list;
         for(map<unsigned int,purchaseData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
         {
-            QString hashText(purMgr->getElement(it->second, PUR_DATE));
-            hashText = hashText + purMgr->getElement(it->second, PUR_BATCH)
-                    + purMgr->getElement(it->second, PUR_BILLNO);
+            QString hashText(purMgr->getElement(it->second, PUR_NO));
+            hashText = hashText + purMgr->getElement(it->second, PUR_DATE) +
+                                    purMgr->getElement(it->second, PUR_BILLNO);
             unsigned int hashValue = hashCode(hashText);
             if(!list.empty() && (std::find(list.begin(), list.end(), hashValue) != list.end()))
                 continue;

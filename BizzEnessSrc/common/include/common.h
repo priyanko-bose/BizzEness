@@ -115,13 +115,13 @@ enum pur_table_flds{
     PUR_NO,
     PUR_DATE ,
     PUR_BILLNO,
-    PUR_BATCH,
     PUR_SUPP ,
     PUR_TOTCOST ,
     PUR_PAID ,
     PUR_DUE,
     //Other items
     PUR_PROD,
+    PUR_BATCH,
     PUR_BOX ,
     PUR_ITEMS ,
     PUR_SUPPADDR,
@@ -171,7 +171,7 @@ const char * const table_name[9] = {
 const char * const table_fields[9][24] = {
     {""},
     {"SummaryId"} ,
-    {"PurchaseId","PurchaseNo","Date","BillNo","BatchNo","Supplier","TotalCost", "Paid","Due","ProductName","Box","Pieces","SupplierAddress","Contact","ContactNo", "Remarks","PcsPerBox","CostPerBox", "CostPerPcs","Tax","Expenses","CashPaid","ChequePaid", "GrandTotal"},
+    {"PurchaseId","PurchaseNo","Date","BillNo","Supplier","TotalCost", "Paid","Due","ProductName","BatchNo","Box","Pieces","SupplierAddress","Contact","ContactNo", "Remarks","PcsPerBox","CostPerBox", "CostPerPcs","Tax","Expenses","CashPaid","ChequePaid", "GrandTotal"},
     {"SalesId"},
     {"CashFlowId"},
     {"ProfitLossId"},
@@ -183,7 +183,7 @@ const char * const table_fields[9][24] = {
 const char * const table_fields_desc[9][24] = {
     {""},
     {""} ,
-    {"","10","16","10","10","32","16","16","16","32","8","10","50","25","16","50","8","16", "16","16","16","16","16","16"},
+    {"","10","16","10","32","16","16","16","32","10","8","10","50","25","16","50","8","16", "16","16","16","16","16","16"},
     {""},
     {""},
     {""},
@@ -195,7 +195,7 @@ const char * const table_fields_desc[9][24] = {
 const static int table_ui_no_fields[9] = {
     0,
     0 ,
-    9,
+    8,
     0,
     0,
     0,
@@ -207,7 +207,7 @@ const static int table_ui_no_fields[9] = {
 const char * const table_ui_fields[9][13] = {
     {""},
     {""} ,
-    {"purid","PurchaseNo","Date","Bill No.","Batch No.","Supplier","Total Cost", "Paid","Due", "", "", "", ""},
+    {"purid","PurchaseNo","Date","Bill No.","Supplier","Total Cost", "Paid","Due","", "", "", "", ""},
     {""},
     {""},
     {""},
@@ -219,7 +219,7 @@ const char * const table_ui_fields[9][13] = {
 const char * const table_ui_detail_fields [9][5] = {
     {""},
     {""} ,
-    {"ProductName","Box","Pieces"},
+    {"ProductName","Batch No.","Box","Pieces"},
     {""},
     {""},
     {""},
@@ -227,6 +227,18 @@ const char * const table_ui_detail_fields [9][5] = {
     {"" },
     {""},
 };
+
+const static int table_ui_no_detail_fields[9] = {
+    0,
+    0 ,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+} ;
 errorType openLogFile();
 void closeFile();
 #endif

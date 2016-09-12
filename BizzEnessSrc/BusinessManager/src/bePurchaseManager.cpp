@@ -253,10 +253,10 @@ errorType BE_PurchaseManager::saveItems()
         myfile<<endl;
         for (map<unsigned int,purchaseData_t>::iterator it=mymap.begin(); it!=mymap.end(); ++it){
             myfile << it->second.purchase_id<<","<<it->second.purno<<","
-               <<it->second.date<<","<< it->second.billno <<","
-               <<it->second.batchNo<<","<<it->second.productName<<","<<it->second.supplier<<","
-               <<it->second.noOfBoxes<<","<<it->second.noOfItems<<","<<it->second.totalCost<<","
-               <<it->second.paidAmnt<<","<<it->second.dueAmnt<<","
+               <<it->second.date<<","<< it->second.billno <<","<<it->second.supplier<<","
+               <<it->second.totalCost<<","<<it->second.paidAmnt<<","<<it->second.dueAmnt<<","
+               <<it->second.productName<<","<<it->second.batchNo<<","
+               <<it->second.noOfBoxes<<","<<it->second.noOfItems<<","
                <<it->second.suppaddr<<","
                <<it->second.contact<<","<<it->second.contactno<<","
                <<it->second.remarks<<","<<it->second.pcsperbox<<","
@@ -383,12 +383,12 @@ errorType BE_PurchaseManager:: getOneRecord(purchaseData_t &purchaseData, matrow
     row->insert(row->begin() + PUR_NO , purchaseData.purno.c_str());
     row->insert(row->begin() + PUR_DATE , purchaseData.date.c_str());
     row->insert(row->begin() + PUR_BILLNO , purchaseData.billno.c_str());
-    row->insert(row->begin() + PUR_BATCH , purchaseData.batchNo.c_str());
     row->insert(row->begin() + PUR_SUPP , purchaseData.supplier.c_str());
     row->insert(row->begin() + PUR_TOTCOST , doubleToString(purchaseData.totalCost).c_str());
     row->insert(row->begin() + PUR_PAID , doubleToString(purchaseData.paidAmnt).c_str());
     row->insert(row->begin() + PUR_DUE , doubleToString(purchaseData.dueAmnt).c_str());
     row->insert(row->begin() + PUR_PROD , purchaseData.productName.c_str());
+    row->insert(row->begin() + PUR_BATCH , purchaseData.batchNo.c_str());
     row->insert(row->begin() + PUR_BOX , intToString(purchaseData.noOfBoxes).c_str());
     row->insert(row->begin() + PUR_ITEMS , intToString(purchaseData.noOfItems).c_str());
     row->insert(row->begin() + PUR_SUPPADDR , purchaseData.suppaddr.c_str());

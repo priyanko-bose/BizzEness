@@ -710,13 +710,13 @@ Table Data</string>
               </property>
               <property name="minimumSize">
                <size>
-                <width>700</width>
+                <width>600</width>
                 <height>425</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
-                <width>715</width>
+                <width>620</width>
                 <height>16777</height>
                </size>
               </property>
@@ -747,7 +747,7 @@ Table Data</string>
               </property>
               <property name="maximumSize">
                <size>
-                <width>315</width>
+                <width>410</width>
                 <height>16777</height>
                </size>
               </property>
