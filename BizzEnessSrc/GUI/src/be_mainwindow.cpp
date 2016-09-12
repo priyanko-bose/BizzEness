@@ -43,14 +43,21 @@ BE_MainWindow::BE_MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     //Prepare Purchase Table dynamically
-    ui->purchaseTableWidget->setColumnCount(12);
-    for(int col = 0; col <= 11 ; col++){
+    ui->purchaseTableWidget->setColumnCount(table_ui_no_fields[TABLE_PURCHASE]);
+    for(int col = 0; col < ui->purchaseTableWidget->columnCount() ; col++){
         QTableWidgetItem *header1 = new QTableWidgetItem();
         header1->setText(table_ui_fields[TABLE_PURCHASE][col]);
         ui->purchaseTableWidget->setHorizontalHeaderItem(col,header1);
     }
     //Show/Don't Show Purchase Table Unique Id
     ui->purchaseTableWidget->setColumnHidden(0,false);
+
+    ui->purDetailTableWidget->setColumnCount(3);
+    for(int col = 0; col <= 2 ; col++){
+        QTableWidgetItem *header1 = new QTableWidgetItem();
+        header1->setText(table_ui_detail_fields[TABLE_PURCHASE][col]);
+        ui->purDetailTableWidget->setHorizontalHeaderItem(col,header1);
+    }
 
 
     ui->stockTableWidget->setColumnCount(13);
@@ -687,7 +694,6 @@ void BE_MainWindow::on_purchaseTableWidget_cellChanged(int row, int col)
 {
     if(!isAdmin)
         return;
-    isPurchaseTableEdited = true;
     int id = 0;
     QTableWidget *table = ui->purchaseTableWidget;
     if(row >= 0 && col > 0)
@@ -696,6 +702,7 @@ void BE_MainWindow::on_purchaseTableWidget_cellChanged(int row, int col)
             setItemToBusinessManager(TABLE_PURCHASE, table->item(row,id)->text().toUInt(),
                                col, table->item(row,col)->text().toStdString());
     }
+    isPurchaseTableEdited = true;
     ui->savePushButton->setEnabled(true);
     ui->cancelPushButton->setEnabled(true);
 }

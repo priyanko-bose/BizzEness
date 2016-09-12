@@ -93,13 +93,9 @@ void BE_PurWindow :: initColumnNameValueMap()
     columnNameValueMap.insert("Pcs. per Box", PURUI_PCSPERBOX);
     columnNameValueMap.insert("Cost of Box", PURUI_COSTOFBOX);
     columnNameValueMap.insert("Cost of Pcs.", PURUI_COSTOFPCS);
+    columnNameValueMap.insert("Total", PURUI_TOTAL);
     columnNameValueMap.insert("Tax", PURUI_TAX);
-    columnNameValueMap.insert("Expenses", PURUI_EXPNS);
-    columnNameValueMap.insert("Total Cost", PURUI_TOTALCOST);
-    columnNameValueMap.insert("Paid by Cash", PURUI_CASHPAID);
-    columnNameValueMap.insert("Paid by cheque", PURUI_CHEQPAID);
-    columnNameValueMap.insert("Total Paid", PURUI_TOTALPAID);
-    columnNameValueMap.insert("Due",PURUI_DUE);
+    columnNameValueMap.insert("Tax%", PURUI_TAXPER);
 }
 
 /*
@@ -157,17 +153,21 @@ void BE_PurWindow::on_purAddPushButton_clicked()
 {
    int count = memoUi->purTableWidget->rowCount();
    memoUi->purTableWidget->insertRow(count);
+
    QTableWidgetItem *tItem = new QTableWidgetItem();
    tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
-   memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALCOST), tItem);
+   memoUi->purTableWidget->setItem(count, getColID(PURUI_TAX), tItem);
 
    tItem = new QTableWidgetItem();
    tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
-   memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALPAID), tItem);
+   memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTAL), tItem);
 
-   tItem = new QTableWidgetItem();
-   tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
-   memoUi->purTableWidget->setItem(count, getColID(PURUI_DUE), tItem);
+   QComboBox *cItem = new QComboBox();
+   cItem->setEditable(true);
+   cItem->addItem(QString("4.5"));
+   cItem->addItem(QString("12.5"));
+   memoUi->purTableWidget->setCellWidget(count, getColID(PURUI_TAXPER), cItem);
+
 }
 /*
  * This function deletes a row at the products table
@@ -224,7 +224,7 @@ void BE_PurWindow::on_productListButtonBox_accepted()
                 }
                 int count = memoUi->purTableWidget->rowCount();
                 memoUi->purTableWidget->insertRow(count);
-
+#ifdef priyanko
                 QTableWidgetItem *tItem = new QTableWidgetItem();
                 tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
                 memoUi->purTableWidget->setItem(count, getColID(PURUI_TOTALCOST), tItem);
@@ -236,8 +236,8 @@ void BE_PurWindow::on_productListButtonBox_accepted()
                 tItem = new QTableWidgetItem();
                 tItem->setFlags(tItem->flags() & ~Qt::ItemIsEditable);
                 memoUi->purTableWidget->setItem(count, getColID(PURUI_DUE), tItem);
-
-                tItem = new QTableWidgetItem();
+#endif
+                QTableWidgetItem * tItem = new QTableWidgetItem();
                 tItem->setText(prodname);
                 memoUi->purTableWidget->setItem(count,getColID(PURUI_NAME),tItem);
 
@@ -365,7 +365,7 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
             uniqueIds[TABLE_STOCK] = hashCode(prodName + batchNo);
             int stockIdStatus = addItemToBusinessManager(TABLE_STOCK, uniqueIds[TABLE_STOCK]);
 
-            for(int col = PURUI_NAME; col <= PURUI_DUE; col++)
+            for(int col = PURUI_NAME; col <= PURUI_TAX; col++)
             {
                 if(memoUi->purTableWidget->item(rowi,col)){
                     if(col == PURUI_PCSPERBOX)
@@ -379,6 +379,19 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
                         memoUi->purTableWidget->item(rowi,getColID((purui_table_flds)col))->text().trimmed().toStdString());
                 }
             }
+            populatePurWindowData(uniqueIds, PURUI_EXPNS,
+               memoUi->totalExpenseLineEdit->text().trimmed().toStdString());
+            populatePurWindowData(uniqueIds, PURUI_GRANDTOTAL,
+               memoUi->grandTotalLineEdit->text().trimmed().toStdString());
+            populatePurWindowData(uniqueIds, PURUI_CASHPAID,
+               memoUi->paidByCash->text().trimmed().toStdString());
+            populatePurWindowData(uniqueIds, PURUI_CHEQPAID,
+               memoUi->paidByCheque->text().trimmed().toStdString());
+            populatePurWindowData(uniqueIds, PURUI_TOTALPAID,
+               memoUi->totalPaidLineEdit->text().trimmed().toStdString());
+            populatePurWindowData(uniqueIds, PURUI_TOTALDUE,
+               memoUi->totalDueLineEdit->text().trimmed().toStdString());
+
             populatePurWindowData(uniqueIds, PURUI_BILL,
                billNo.toStdString());
             populatePurWindowData(uniqueIds, PURUI_PURNO,
@@ -432,48 +445,23 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
                 }
                 else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][5])
                 {
-                    data->setText(prodName);
+                    data->setText(memoUi->companyComboBox->lineEdit()->text().trimmed());
                     curTable->setItem(row,col, data);
                 }
                 else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][6])
                 {
-                    data->setText(memoUi->companyComboBox->lineEdit()->text().trimmed());
+                    data->setText(memoUi->grandTotalLineEdit->text().trimmed());
                     curTable->setItem(row,col, data);
                 }
                 else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][7])
                 {
-                    if(memoUi->purTableWidget->item(rowi,getColID(PURUI_BOXNO))){
-                        data->setText(memoUi->purTableWidget->item(rowi,getColID(PURUI_BOXNO))->text().trimmed());
-                        curTable->setItem(row,col, data);
-                    }
+                    data->setText(memoUi->totalPaidLineEdit->text().trimmed());
+                    curTable->setItem(row,col, data);
                 }
                 else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][8])
                 {
-                    if(memoUi->purTableWidget->item(rowi,getColID(PURUI_PCSNO))){
-                        data->setText(memoUi->purTableWidget->item(rowi,getColID(PURUI_PCSNO))->text().trimmed());
-                        curTable->setItem(row,col, data);
-                    }
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][9])
-                {
-                    if(memoUi->purTableWidget->item(rowi,getColID(PURUI_TOTALCOST))){
-                        data->setText(memoUi->purTableWidget->item(rowi,getColID(PURUI_TOTALCOST))->text().trimmed());
-                        curTable->setItem(row,col, data);
-                    }
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][10])
-                {
-                    if(memoUi->purTableWidget->item(rowi,getColID(PURUI_TOTALPAID))){
-                        data->setText(memoUi->purTableWidget->item(rowi,getColID(PURUI_TOTALPAID))->text().trimmed());
-                        curTable->setItem(row,col, data);
-                    }
-                }
-                else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][11])
-                {
-                    if(memoUi->purTableWidget->item(rowi,getColID(PURUI_DUE))){
-                        data->setText(memoUi->purTableWidget->item(rowi,getColID(PURUI_DUE))->text().trimmed());
-                        curTable->setItem(row,col, data);
-                    }
+                    data->setText(memoUi->totalDueLineEdit->text().trimmed());
+                    curTable->setItem(row,col, data);
                 }
                 else{
                     continue;
@@ -490,6 +478,7 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
                 delete record;
                 record = '\0';
             }
+
             prepareRecord(TABLE_STOCK, uniqueIds[TABLE_STOCK], &record);
             if(stockIdStatus == ERR_DUP_ID){
                 updateRecordInDB(TABLE_STOCK, uniqueIds[TABLE_STOCK], record);
@@ -521,7 +510,7 @@ void BE_PurWindow::on_purMemoUIButtonBox_rejected()
 void BE_PurWindow :: on_purTableWidget_cellChanged(int row, int col){
     QTableWidget *table = memoUi->purTableWidget;
     int rowCount = memoUi->purTableWidget->rowCount();
-    double cost = 0.0, paid = 0.0, due = 0.0;
+    double cost = 0.0, paid = 0.0;
     double totalcost=0.0, totaltax=0.0, totalpaid=0.0, totaldue=0.0, grandtotal=0.0;
     if((col == getColID(PURUI_PCSNO)) || (col == getColID(PURUI_COSTOFPCS))
             || (col == getColID(PURUI_BOXNO)) || (col == getColID(PURUI_COSTOFBOX))
@@ -535,68 +524,49 @@ void BE_PurWindow :: on_purTableWidget_cellChanged(int row, int col){
             cost = cost + table->item(row, getColID(PURUI_BOXNO))->text().toInt() *
                        table->item(row,getColID(PURUI_COSTOFBOX))->text().toDouble();
 
-        if(table->item(row, getColID(PURUI_EXPNS)))
-            cost = cost + table->item(row,getColID(PURUI_EXPNS))->text().toDouble();
+        if(table->item(row,getColID(PURUI_TOTAL)))
+            table->item(row,getColID(PURUI_TOTAL))->setText(QString::number(cost));
 
         if(table->item(row, getColID(PURUI_TAX))){
-            cost = cost + table->item(row,getColID(PURUI_TAX))->text().toDouble();
+            QComboBox *box = qobject_cast<QComboBox *>(table->cellWidget(row,getColID(PURUI_TAXPER)));
+            double tax;
+            if(box)
+                tax = (cost * box->lineEdit()->text().toDouble())/100.0;
+            table->item(row,getColID(PURUI_TAX))->setText(QString::number(tax));
             for(int iter = 0; iter < rowCount; iter++ ){
                 if(table->item(iter, getColID(PURUI_TAX)))
                     totaltax = totaltax + table->item(iter, getColID(PURUI_TAX))->text().toDouble();
+                if(table->item(iter, getColID(PURUI_TOTAL)))
+                    totalcost = totalcost + table->item(iter, getColID(PURUI_TOTAL))->text().toDouble();
             }
             memoUi->totalTaxLineEdit->setText(QString::number(totaltax));
+            memoUi->totalCostLineEdit->setText(QString::number(totalcost));
         }
 
+    }
+    if(!memoUi->totalTaxLineEdit->text().isEmpty())
+        grandtotal = grandtotal + memoUi->totalTaxLineEdit->text().toDouble();
+    if(!memoUi->totalCostLineEdit->text().isEmpty())
+        grandtotal = grandtotal + memoUi->totalCostLineEdit->text().toDouble();
 
-        if(!table->item(row, getColID(PURUI_TOTALCOST))){
-            QTableWidgetItem *item = new QTableWidgetItem();
-            table->setItem(row, getColID(PURUI_TOTALCOST), item);
-        }
-        table->item(row, getColID(PURUI_TOTALCOST))->setText(QString::number(cost));
+
+    if(!memoUi->totalExpenseLineEdit->text().isEmpty())
+        grandtotal = grandtotal + memoUi->totalExpenseLineEdit->text().toDouble();
+
+    if(!memoUi->paidByCash->text().isEmpty()){
+        paid = memoUi->paidByCash->text().toDouble();
+        totalpaid = totalpaid + paid;
     }
 
-    if((col == getColID(PURUI_CASHPAID)) || (col == getColID(PURUI_CHEQPAID))){
-        if(table->item(row, getColID(PURUI_CASHPAID)))
-            paid = paid  + table->item(row,getColID(PURUI_CASHPAID))->text().toDouble();
-        if(table->item(row, getColID(PURUI_CHEQPAID)))
-            paid = paid  + table->item(row,getColID(PURUI_CHEQPAID))->text().toDouble();
+     if(!memoUi->paidByCheque->text().isEmpty()){
+         paid = memoUi->paidByCheque->text().toDouble();
+         totalpaid = totalpaid + paid;
+     }
+     totaldue = grandtotal - totalpaid;
 
-        if(!table->item(row, getColID(PURUI_TOTALPAID))){
-            QTableWidgetItem *item = new QTableWidgetItem();
-            table->setItem(row, getColID(PURUI_TOTALPAID), item);
-        }
-        table->item(row, getColID(PURUI_TOTALPAID))->setText(QString::number(paid));
-        for(int iter = 0; iter < rowCount; iter++ ){
-            if(table->item(iter, getColID(PURUI_TOTALPAID)))
-                totalpaid = totalpaid + table->item(iter, getColID(PURUI_TOTALPAID))->text().toDouble();
-        }
-        memoUi->totalPaidLineEdit->setText(QString::number(totalpaid));
-    }
-
-    if((col == getColID(PURUI_TOTALCOST)) || (col == getColID(PURUI_TOTALPAID))){
-        if(table->item(row, getColID(PURUI_TOTALCOST)))
-            due = due + table->item(row,getColID(PURUI_TOTALCOST))->text().toDouble();
-        if(table->item(row, getColID(PURUI_TOTALPAID)))
-            due = due - table->item(row,getColID(PURUI_TOTALPAID))->text().toDouble();
-
-        if(!table->item(row, getColID(PURUI_DUE))){
-            QTableWidgetItem *item = new QTableWidgetItem();
-            table->setItem(row, getColID(PURUI_DUE), item);
-        }
-        table->item(row, getColID(PURUI_DUE))->setText(QString::number(due));
-        for(int iter = 0; iter < rowCount; iter++ ){
-            if(table->item(iter, getColID(PURUI_TOTALCOST)))
-                grandtotal = grandtotal + table->item(iter, getColID(PURUI_TOTALCOST))->text().toDouble();
-            if(table->item(iter, getColID(PURUI_TOTALPAID)))
-                totalpaid = totalpaid + table->item(iter, getColID(PURUI_TOTALPAID))->text().toDouble();
-            if(table->item(iter, getColID(PURUI_DUE)))
-                totaldue = totaldue + table->item(iter, getColID(PURUI_DUE))->text().toDouble();
-            totalcost = grandtotal - memoUi->totalTaxLineEdit->text().toDouble();
-        }
-        memoUi->grandTotalLineEdit->setText(QString::number(grandtotal));
-        memoUi->totalCostLineEdit->setText(QString::number(totalcost));
-        memoUi->totalDueLineEdit->setText(QString::number(totaldue));
-    }
+     memoUi->totalPaidLineEdit->setText(QString::number(totalpaid));
+     memoUi->grandTotalLineEdit->setText(QString::number(grandtotal));
+     memoUi->totalDueLineEdit->setText(QString::number(totaldue));
 }
 
 void BE_PurWindow::print(QPrinter *printer)
@@ -702,8 +672,8 @@ void BE_PurWindow::print(QPrinter *printer)
     offsetH = drawDoubleLines(&painter, offsetW,offsetH,printAreaW - offsetW, offsetH) + linespace;
 
     rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
-    offsetH = printLine(&painter, rect.bottomLeft(), "Total(incl expn): " + memoUi->totalCostLineEdit->text(),
-              "Times New Roman", maxFontHeight * 0.75) + linespace;
+    //offsetH = printLine(&painter, rect.bottomLeft(), "Total(incl expn): " + memoUi->totalCostLineEdit->text(),
+   //           "Times New Roman", maxFontHeight * 0.75) + linespace;
 
     rect = QRect(QPoint(offsetW,offsetH),QPoint((printAreaW - offsetW)/2, offsetH + maxFontHeight));
     offsetH = printLine(&painter, rect.bottomLeft(), "Tax: " + memoUi->totalTaxLineEdit->text(),

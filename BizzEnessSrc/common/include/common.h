@@ -89,14 +89,14 @@ enum purui_table_flds{
     PURUI_PCSPERBOX,
     PURUI_COSTOFBOX,
     PURUI_COSTOFPCS,
+    PURUI_TOTAL,
     PURUI_TAX,
+    //Common  part for all items in the same purchase bill
     PURUI_EXPNS,
-    PURUI_TOTALCOST,
     PURUI_CASHPAID,
     PURUI_CHEQPAID,
     PURUI_TOTALPAID,
-    PURUI_DUE,
-    //Common  part for all items in the same purchase bill
+    PURUI_TOTALDUE,
     PURUI_BILL,
     PURUI_PURNO,
     PURUI_DATE,
@@ -105,6 +105,8 @@ enum purui_table_flds{
     PURUI_CONTACT,
     PUTRUI_CONTACTNO,
     PURUI_REMARKS,
+    PURUI_TAXPER,
+    PURUI_GRANDTOTAL,
     PURUI_END
 };
 
@@ -114,14 +116,14 @@ enum pur_table_flds{
     PUR_DATE ,
     PUR_BILLNO,
     PUR_BATCH,
-    PUR_PROD = 5,
     PUR_SUPP ,
-    PUR_BOX ,
-    PUR_ITEMS ,
     PUR_TOTCOST ,
     PUR_PAID ,
-    PUR_DUE = 11,
+    PUR_DUE,
     //Other items
+    PUR_PROD,
+    PUR_BOX ,
+    PUR_ITEMS ,
     PUR_SUPPADDR,
     PUR_CONTACT,
     PUR_CONTACTNO,
@@ -133,6 +135,7 @@ enum pur_table_flds{
     PUR_EXPNS,
     PUR_CASHPAID,
     PUR_CHEQPAID,
+    PUR_GRANDTOTAL,
     PUR_END
 };
 
@@ -165,10 +168,10 @@ const char * const table_name[9] = {
     "SalesReturn",
 } ;
 
-const char * const table_fields[9][23] = {
+const char * const table_fields[9][24] = {
     {""},
     {"SummaryId"} ,
-    {"PurchaseId","PurchaseNo","Date","BillNo","BatchNo","ProductName","Supplier","Box","Pieces","TotalCost", "Paid","Due","SupplierAddress","Contact","ContactNo", "Remarks","PcsPerBox","CostPerBox", "CostPerPcs","Tax","Expenses","CashPaid","ChequePaid"},
+    {"PurchaseId","PurchaseNo","Date","BillNo","BatchNo","Supplier","TotalCost", "Paid","Due","ProductName","Box","Pieces","SupplierAddress","Contact","ContactNo", "Remarks","PcsPerBox","CostPerBox", "CostPerPcs","Tax","Expenses","CashPaid","ChequePaid", "GrandTotal"},
     {"SalesId"},
     {"CashFlowId"},
     {"ProfitLossId"},
@@ -177,10 +180,10 @@ const char * const table_fields[9][23] = {
     {"SalesReturnId"},
 } ;
 
-const char * const table_fields_desc[9][23] = {
+const char * const table_fields_desc[9][24] = {
     {""},
     {""} ,
-    {"","10","16","10","10","32","32","8","10","16","16","16","50","25","16","50","8","16", "16","16","16","16","16"},
+    {"","10","16","10","10","32","16","16","16","32","8","10","50","25","16","50","8","16", "16","16","16","16","16","16"},
     {""},
     {""},
     {""},
@@ -189,10 +192,22 @@ const char * const table_fields_desc[9][23] = {
     {""},
 } ;
 
+const static int table_ui_no_fields[9] = {
+    0,
+    0 ,
+    9,
+    0,
+    0,
+    0,
+    13,
+    0,
+    0,
+} ;
+
 const char * const table_ui_fields[9][13] = {
     {""},
     {""} ,
-    {"purid","PurchaseNo","Date","Bill No.","Batch No.","ProductName","Supplier","Box","Pieces","Total Cost", "Paid","Due", ""},
+    {"purid","PurchaseNo","Date","Bill No.","Batch No.","Supplier","Total Cost", "Paid","Due", "", "", "", ""},
     {""},
     {""},
     {""},
@@ -201,6 +216,17 @@ const char * const table_ui_fields[9][13] = {
     {""},
 } ;
 
+const char * const table_ui_detail_fields [9][5] = {
+    {""},
+    {""} ,
+    {"ProductName","Box","Pieces"},
+    {""},
+    {""},
+    {""},
+    {""},
+    {"" },
+    {""},
+};
 errorType openLogFile();
 void closeFile();
 #endif

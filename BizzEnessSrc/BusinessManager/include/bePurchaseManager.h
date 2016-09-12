@@ -32,6 +32,7 @@ typedef struct {
     double expns;
     double cashpaid;
     double chqpaid;
+    double grandtotal;
 }purchaseData_t;
 
 class BE_PurchaseManager

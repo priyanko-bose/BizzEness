@@ -79,6 +79,8 @@ const char * BE_PurchaseManager::getElement(purchaseData_t &purchaseData, int it
         return  doubleToString(purchaseData.cashpaid).c_str();
     case PUR_CHEQPAID:
         return  doubleToString(purchaseData.chqpaid).c_str();
+    case PUR_GRANDTOTAL:
+        return  doubleToString(purchaseData.grandtotal).c_str();
     default:
         break;
     };
@@ -167,6 +169,9 @@ errorType BE_PurchaseManager::setItem(unsigned int key, int itemno, string val)
         case PUR_CHEQPAID:
             purchaseData.chqpaid = atof(val.c_str());
             break;
+        case PUR_GRANDTOTAL:
+            purchaseData.grandtotal = atof(val.c_str());
+            break;
         default:
             break;
         };
@@ -218,7 +223,7 @@ errorType BE_PurchaseManager::addNewItem(unsigned int key)
         purchaseData.expns = 0.0;
         purchaseData.cashpaid = 0.0;
         purchaseData.chqpaid = 0.0;
-
+        purchaseData.grandtotal = 0.0;
         purchaseData.purchase_id = key;
         //insert into the tock table map
         this->purchaseTable.insert(std::pair<unsigned int,purchaseData_t>(key,purchaseData));
@@ -257,7 +262,8 @@ errorType BE_PurchaseManager::saveItems()
                <<it->second.remarks<<","<<it->second.pcsperbox<<","
                <<it->second.costofbox<<","<<it->second.costofpcs<<","
                <<it->second.tax<<","<<it->second.expns<<","
-               <<it->second.cashpaid<<","<<it->second.chqpaid<<endl;
+               <<it->second.cashpaid<<","<<it->second.chqpaid<<","
+               <<it->second.grandtotal<<endl;
         }
         fout<<"info:BE_PurchaseManager::savePurchaseManager:saved data:"<<endl;
     }
@@ -326,6 +332,7 @@ errorType BE_PurchaseManager::insertSavedItem(matrow *row)
     purchaseData.expns = atof(row->at(PUR_EXPNS).c_str());
     purchaseData.cashpaid = atof(row->at(PUR_CASHPAID).c_str());
     purchaseData.chqpaid = atof(row->at(PUR_CHEQPAID).c_str());
+    purchaseData.grandtotal = atof(row->at(PUR_GRANDTOTAL).c_str());
     //insert into the purchase table
     this->purchaseTable.insert(std::pair<unsigned int,purchaseData_t>(purchaseData.purchase_id,purchaseData));
     row->clear();
@@ -363,6 +370,7 @@ errorType BE_PurchaseManager::insertCSVData(CSVRow &row)
     purchaseData.expns = atof(row[PUR_EXPNS].c_str());
     purchaseData.cashpaid = atof(row[PUR_CASHPAID].c_str());
     purchaseData.chqpaid = atof(row[PUR_CHEQPAID].c_str());
+    purchaseData.grandtotal = atof(row[PUR_GRANDTOTAL].c_str());
     //insert into the purchase table
     this->purchaseTable.insert(std::pair<unsigned int,purchaseData_t>(purchaseData.purchase_id,purchaseData));
     return ERR_NONE;
@@ -376,13 +384,13 @@ errorType BE_PurchaseManager:: getOneRecord(purchaseData_t &purchaseData, matrow
     row->insert(row->begin() + PUR_DATE , purchaseData.date.c_str());
     row->insert(row->begin() + PUR_BILLNO , purchaseData.billno.c_str());
     row->insert(row->begin() + PUR_BATCH , purchaseData.batchNo.c_str());
-    row->insert(row->begin() + PUR_PROD , purchaseData.productName.c_str());
     row->insert(row->begin() + PUR_SUPP , purchaseData.supplier.c_str());
-    row->insert(row->begin() + PUR_BOX , intToString(purchaseData.noOfBoxes).c_str());
-    row->insert(row->begin() + PUR_ITEMS , intToString(purchaseData.noOfItems).c_str());
     row->insert(row->begin() + PUR_TOTCOST , doubleToString(purchaseData.totalCost).c_str());
     row->insert(row->begin() + PUR_PAID , doubleToString(purchaseData.paidAmnt).c_str());
     row->insert(row->begin() + PUR_DUE , doubleToString(purchaseData.dueAmnt).c_str());
+    row->insert(row->begin() + PUR_PROD , purchaseData.productName.c_str());
+    row->insert(row->begin() + PUR_BOX , intToString(purchaseData.noOfBoxes).c_str());
+    row->insert(row->begin() + PUR_ITEMS , intToString(purchaseData.noOfItems).c_str());
     row->insert(row->begin() + PUR_SUPPADDR , purchaseData.suppaddr.c_str());
     row->insert(row->begin() + PUR_CONTACT , purchaseData.contact.c_str());
     row->insert(row->begin() + PUR_CONTACTNO , purchaseData.contactno.c_str());
@@ -394,6 +402,7 @@ errorType BE_PurchaseManager:: getOneRecord(purchaseData_t &purchaseData, matrow
     row->insert(row->begin() + PUR_EXPNS , doubleToString(purchaseData.expns).c_str());
     row->insert(row->begin() + PUR_CASHPAID , doubleToString(purchaseData.cashpaid).c_str());
     row->insert(row->begin() + PUR_CHEQPAID , doubleToString(purchaseData.chqpaid).c_str());
+    row->insert(row->begin() + PUR_GRANDTOTAL , doubleToString(purchaseData.grandtotal).c_str());
     return ERR_NONE;
 }
 

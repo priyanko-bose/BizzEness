@@ -4,6 +4,7 @@
 #include "Interface/include/ifHandleGUI.h"
 #include "Interface/include/ifHandleBM.h"
 #include "GUI/include/be_mainwindow.h"
+#include "GUI/include/be_guiutils.h"
 #include "BusinessManager/include/beBusinessManager.h"
 #include "BusinessManager/include/bePurchaseManager.h"
 #include "BusinessManager/include/beStockManager.h"
@@ -243,14 +244,14 @@ errorType populatePurWindowData(unsigned int *id, int flds , string data)
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_COSTOFPCS, data);
         updateToBusinessManager(TABLE_STOCK, id[TABLE_STOCK], PROD_CPP, data, stockOP);
         break;
+    case PURUI_TOTAL:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_TOTCOST, data);
+        break;
     case PURUI_TAX:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_TAX, data);
         break;
     case PURUI_EXPNS:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_EXPNS, data);
-        break;
-    case PURUI_TOTALCOST:
-        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_TOTCOST, data);
         break;
     case PURUI_CASHPAID:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_CASHPAID, data);
@@ -261,7 +262,7 @@ errorType populatePurWindowData(unsigned int *id, int flds , string data)
     case PURUI_TOTALPAID:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_PAID, data);
         break;
-    case PURUI_DUE:
+    case PURUI_TOTALDUE:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_DUE, data);
         break;
     case PURUI_BILL:
@@ -289,6 +290,9 @@ errorType populatePurWindowData(unsigned int *id, int flds , string data)
         break;
     case PURUI_REMARKS:
         setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_REMARKS, data);
+        break;
+    case PURUI_GRANDTOTAL:
+        setItemToBusinessManager(TABLE_PURCHASE, id[TABLE_PURCHASE], PUR_GRANDTOTAL, data);
         break;
     default:
         break;
@@ -353,8 +357,18 @@ errorType populateSavedData()
         map <unsigned int, purchaseData_t> & table = purMgr->getPurchaseTable();
         int rowCount = purMgr->totItems;
         int row = 0;
+        vector<unsigned int> list;
         for(map<unsigned int,purchaseData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
         {
+            QString hashText(purMgr->getElement(it->second, PUR_DATE));
+            hashText = hashText + purMgr->getElement(it->second, PUR_BATCH)
+                    + purMgr->getElement(it->second, PUR_BILLNO);
+            unsigned int hashValue = hashCode(hashText);
+            if(!list.empty() && (std::find(list.begin(), list.end(), hashValue) != list.end()))
+                continue;
+            else
+                    list.push_back(hashValue);
+
             purchaseTable->insertRow(row);
             for(int col=PUR_ID; col <= PUR_DUE; col++)
             {
@@ -362,7 +376,10 @@ errorType populateSavedData()
                 {
                     QTableWidgetItem *item = new QTableWidgetItem();
                     char data[256] = {'\0',};
-                    strcpy(data,purMgr->getElement(it->second, col));
+                    if(col == PUR_TOTCOST)
+                        strcpy(data,purMgr->getElement(it->second, PUR_GRANDTOTAL));
+                    else
+                        strcpy(data,purMgr->getElement(it->second, col));
                     item->setText(data);
                     item->setToolTip(data);
                     if(!isAdmin || col == PUR_ID)
