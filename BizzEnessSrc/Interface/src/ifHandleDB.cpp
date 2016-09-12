@@ -55,17 +55,18 @@ errorType readRecords()
         beMangObj->getPurchaseManager()->totItems = totItems;
     }
 
-    /* fout<<"info:ifHandleDB.cpp:readRecords:reading data from STOCKdatabase"<<endl;
-    int totItems = 0;
-    string **records = 0;
-    errorCode = ERR_NONE;
-    errorCode |= beDbObj->stockTableHandler->readDataBase(matrix, &totItems);
-    errorCode |= beMangObj->getStockManager()->readFileData(matrix, totItems);
-    if(!errorCode)
-        beMangObj->isStockDataRead = true;
-
+    fout<<"info:ifHandleDB.cpp:readRecords:reading data from STOCK database"<<endl;
     totItems = 0;
-    matrix = 0;
+    errorCode |= beDbObj->readDataBase(TABLE_STOCK, PROD_ID, PROD_END, &records, &totItems);
+    for(int iter=0; iter < totItems; iter++)
+        errorCode |= beMangObj->getStockManager()->insertSavedItem(&records.at(iter));
+    records.clear();
+    if(totItems){
+        beMangObj->isStockDataRead = true;
+        beMangObj->getStockManager()->totItems = totItems;
+    }
+
+    /*totItems = 0;
     errorCode = ERR_NONE;
     errorCode = beMangObj->getSalesManager()->readFileData(&totItems);
     if(totItems)
@@ -100,6 +101,7 @@ errorType saveRecordsInDB()
 {
     int errorCode = 0 ;
     errorCode |= saveTableRecords(TABLE_PURCHASE);
+    errorCode |= saveTableRecords(TABLE_STOCK);
     return (errorType)errorCode;
 }
 
@@ -120,11 +122,21 @@ errorType saveTableRecords(tableType type)
         for(int iter=0; iter < totItems; iter++){
             fout << records->at(iter).at(0);
             errorCode |= beDbObj->editIntoDataBase(type, PUR_ID, PUR_END,
-                                                   atol(records->at(iter).at(0).c_str()) , &records->at(iter));
+                                                   atol(records->at(iter).at(PUR_ID).c_str()) , &records->at(iter));
+        }
+    }
+    else if(type == TABLE_STOCK){
+        fout<<"info:ifHandleDB.cpp:saveRecordsInDB:saving data into Stock database"<<endl;
+        errorCode |= beMangObj->getStockManager()->readBMData(&records, &totItems);
+        for(int iter=0; iter < totItems; iter++){
+            fout << records->at(iter).at(0);
+            errorCode |= beDbObj->editIntoDataBase(type, PROD_ID, PROD_END,
+                                                   atol(records->at(iter).at(PROD_ID).c_str()) , &records->at(iter));
         }
     }
     totItems = 0;
-    delete records;
+    if(records)
+        delete records;
     records = '\0';
 
     if(errorCode)
@@ -135,6 +147,23 @@ errorType saveTableRecords(tableType type)
     return (errorType)errorCode;
 }
 
+/* Update one record row in a table to database */
+errorType updateRecordInDB(tableType tbl, unsigned int id, matrow *record)
+{
+    int errorCode = 0 ;
+    BE_DatabaseHandler *beDbObj = BE_DatabaseHandler::getDataBaseHandlerInstance();
+    switch(tbl){
+        case TABLE_PURCHASE:
+            errorCode = beDbObj->editIntoDataBase(TABLE_PURCHASE, PUR_ID, PUR_END, id, record);
+            break;
+        case TABLE_STOCK:
+            errorCode = beDbObj->editIntoDataBase(TABLE_STOCK, PROD_ID, PROD_END, id, record);
+            break;
+        default:
+            break;
+    }
+    return (errorType)errorCode;
+}
 /* Add one record row in a table to database */
 errorType saveRecordInDB(tableType tbl, unsigned int id, matrow *record)
 {
@@ -144,11 +173,12 @@ errorType saveRecordInDB(tableType tbl, unsigned int id, matrow *record)
         case TABLE_PURCHASE:
             errorCode = beDbObj->addIntoDataBase(TABLE_PURCHASE, PUR_ID, PUR_END, id, record);
             break;
+        case TABLE_STOCK:
+            errorCode = beDbObj->addIntoDataBase(TABLE_STOCK, PROD_ID, PROD_END, id, record);
+            break;
         default:
             break;
     }
-    delete record;
-    record = '\0';
     return (errorType)errorCode;
 }
 
@@ -160,6 +190,9 @@ errorType delFromDataBase(tableType tbl, unsigned int id)
     switch(tbl){
         case TABLE_PURCHASE:
             errorCode = beDbObj->deleteFromDataBase(TABLE_PURCHASE, id);
+            break;
+        case TABLE_STOCK:
+            errorCode = beDbObj->deleteFromDataBase(TABLE_STOCK, id);
             break;
         default:
             break;

@@ -62,14 +62,14 @@ const char * BE_SalesManager::getElement(salesData_t &salesData, int itemno)
 }
 
 /*
- * This function updates the fields of a sales table entry
+ * This function sets the fields of a sales table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_SalesManager::updateItem(int key, int itemno, string val)
+errorType BE_SalesManager::setItem(int key, int itemno, string val)
 {
     //get the sales table entry
     if(this->salesTable.find(key) == this->salesTable.end()){
-        fout << "error("<<ERR_WRONG_ID<<"):beSalesManager.cpp:updateSalesManger"<<endl;
+        fout << "error("<<ERR_WRONG_ID<<"):beSalesManager.cpp:setItem"<<endl;
         return ERR_WRONG_ID;
     }
     else{
@@ -112,6 +112,15 @@ errorType BE_SalesManager::updateItem(int key, int itemno, string val)
         };
     }
     return ERR_NONE;
+}
+
+/*
+ * This function sets the fields of a Sales table entry
+ * entry is identified by id and fields are identified by field name
+ */
+errorType BE_SalesManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
+{
+    return setItem(key,itemno, val);
 }
 
 /*

@@ -8,25 +8,8 @@
 #include <common/include/common.h>
 using namespace std;
 
-enum stock_table_flds{
-    PROD_ID = 0,
-    PROD_DATE = 1,
-    PROD_BATCH = 2,
-    PROD_NAME = 3,
-    PROD_COMP = 4,
-    PROD_MFG = 5,
-    PROD_EXP = 6,
-    PROD_NOB = 7,
-    PROD_NOI = 8,
-    PROD_NOTI = 9,
-    PROD_CPB = 10,
-    PROD_CPP = 11,
-    PROD_PPB = 12,
-    PROD_END
-};
-
 typedef struct {
-    int product_id;
+    unsigned int product_id;
     string date;
     string batchNo;
     string productName;
@@ -38,7 +21,7 @@ typedef struct {
     unsigned int noOfTotItems;
     double cost_per_box;
     double cost_per_pcs;
-    unsigned int pcs_per_box;
+    int pcs_per_box;
 }stockData_t;
 
 class BE_StockManager
@@ -46,18 +29,26 @@ class BE_StockManager
 public:
     BE_StockManager();
     ~BE_StockManager();
-    errorType updateItem(unsigned int , int , string );
+    errorType updateItem(unsigned int , int , string, int );
+    errorType setItem(unsigned int , int , string);
     errorType addNewItem(unsigned int );
     errorType saveItems();
-    errorType deleteItem(int );
-    errorType insertSavedItem(CSVRow &row);
-    errorType readFileData(string **, int );
-    map <int, stockData_t> & getStockTable();
-    const char * getElement(stockData_t &stockData, int itemno);
+    errorType deleteItem(unsigned int );
+    errorType insertSavedItem(matrow *);
+    errorType readBMData(matrix **, int *);
+    errorType getOneRecord(stockData_t &, matrow *);
+    errorType getRecord(unsigned int ,matrow *);
+    errorType readFileData(string , int *);
+    errorType insertCSVData(CSVRow &);
+    errorType deleteAllItems();
+    map <unsigned int, stockData_t> & getStockTable();
+    const char * getElement(stockData_t &, int );
     list<string> *getStockProductList();
+    list<string> *getStockCompanyList();
+    list<string> * getFilteredList(int ,int , string );
     int totItems;
  private:
-    map <int, stockData_t> stockTable;
+    map <unsigned int, stockData_t> stockTable;
 };
 
 #endif // BESTOCKMANAGER_H

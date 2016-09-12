@@ -67,25 +67,28 @@ errorType BE_DatabaseHandler::initDB()
                      string qry = getTableCreateQuery(TABLE_PURCHASE, PUR_ID, PUR_END);
                      bool val = qr.exec(qry.c_str());
                      if(!val)
-                         fout<<"BE_PurTableHandler :: addIntoDataBase:Error:" << qr.lastError().text().toStdString()<<endl;
+                         fout<<"BE_DatabaseHandler::initDB:Error:" << qr.lastError().text().toStdString()<<endl;
                      else
-                         fout<<"BE_DatabaseHandler::BE_DatabaseHandler:Blank "<<table_name[tab]<<" Table Created"<<endl;
+                         fout<<"BE_DatabaseHandler::initDB:Blank "<<table_name[tab]<<" Table Created"<<endl;
                  }
-                 /*else if(tab == TABLE_STOCK){
-                     qr.exec(getStockTableCreateQuery());
-                     if(qr.record().isEmpty())
-                         fout<<"BE_DatabaseHandler::BE_DatabaseHandler:Blank "<<table_name[tab]<<" Table Created"<<endl;
-                 }*/
+                 else if(tab == TABLE_STOCK){
+                     string qry = getTableCreateQuery(TABLE_STOCK, PROD_ID, PROD_END);
+                     bool val = qr.exec(qry.c_str());
+                     if(!val)
+                         fout<<"BE_DatabaseHandler :: initDB:Error:" << qr.lastError().text().toStdString()<<endl;
+                     else
+                         fout<<"BE_DatabaseHandler::initDB:Blank "<<table_name[tab]<<" Table Created"<<endl;
+                 }
                  else
                      continue;
              }
          }
          beDB->close();
-         fout<<"BE_DatabaseHandler::BE_DatabaseHandler:database Has been closed"<<endl;
+         fout<<"BE_DatabaseHandler::initDB:database Has been closed"<<endl;
 
      }
      else{
-         fout<<"BE_DatabaseHandler::BE_DatabaseHandler:error in opening file"<<endl;
+         fout<<"BE_DatabaseHandler::initDB:error in opening file"<<endl;
          return ERR_DB_OPEN;
      }
 

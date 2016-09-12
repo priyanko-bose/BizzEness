@@ -11,9 +11,11 @@ void deinitializeGUI();
 
 errorType populateSavedData();
 QStringList *getProductList();
-
+QStringList *getCompanyList();
+QStringList * getFilteredList(int , int, int,QString );
+QString * getTableItem(int, int, QString, int);
 //Window specific functions
-errorType populatePurWindowData(unsigned int , int , string );
+errorType populatePurWindowData(unsigned int *, int , string );
 errorType importTableData(string);
 
 #endif // IFHANDLEGUI_H

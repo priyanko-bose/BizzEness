@@ -60,14 +60,14 @@ const char * BE_SumManager::getElement(sumData_t &sumData, int itemno)
 }
 
 /*
- * This function updates the fields of a sum table entry
+ * This function sets the fields of a sum table entry
  * entry is identified by id and fields are identified by field name
  */
-errorType BE_SumManager::updateItem(int key, int itemno, string val)
+errorType BE_SumManager::setItem(int key, int itemno, string val)
 {
     //get the sum table entry
     if(this->sumTable.find(key) == this->sumTable.end()){
-        fout << "error("<<ERR_WRONG_ID<<"):beSumManager.cpp:updateSumManger"<<endl;
+        fout << "error("<<ERR_WRONG_ID<<"):beSumManager.cpp:setItem"<<endl;
         return ERR_WRONG_ID;
     }
     else{
@@ -107,6 +107,15 @@ errorType BE_SumManager::updateItem(int key, int itemno, string val)
         };
     }
     return ERR_NONE;
+}
+
+/*
+ * This function sets the fields of a Summary table entry
+ * entry is identified by id and fields are identified by field name
+ */
+errorType BE_SumManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
+{
+    return setItem(key,itemno, val);
 }
 
 /*

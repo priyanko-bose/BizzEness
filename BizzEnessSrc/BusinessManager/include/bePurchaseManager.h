@@ -39,19 +39,21 @@ class BE_PurchaseManager
 public:
     BE_PurchaseManager();
     ~BE_PurchaseManager();
-    errorType updateItem(unsigned int , int , string );
+    errorType setItem(unsigned int , int , string );
+    errorType updateItem(unsigned int , int , string, int );
     errorType addNewItem(unsigned int );
     errorType saveItems();
     errorType deleteItem(unsigned int );
     errorType insertSavedItem(matrow *);
     errorType readBMData(matrix **, int *);
     errorType getOneRecord(purchaseData_t &, matrow *);
-    errorType getRecord(unsigned int id,matrow *record);
+    errorType getRecord(unsigned int ,matrow *);
     errorType readFileData(string , int *);
-    errorType insertCSVData(CSVRow &row);
+    errorType insertCSVData(CSVRow &);
     errorType deleteAllItems();
     map <unsigned int, purchaseData_t> & getPurchaseTable();
     const char * getElement(purchaseData_t &, int );
+    errorType getItemText(int , string , int, string *);
     int totItems;
  private:
     map <unsigned int, purchaseData_t> purchaseTable;

@@ -41,7 +41,8 @@ class BE_SalesManager
 public:
     BE_SalesManager();
     ~BE_SalesManager();
-    errorType updateItem(int , int , string );
+    errorType setItem(int , int , string );
+    errorType updateItem(unsigned int , int , string, int );
     errorType addNewItem(int );
     errorType saveItems();
     errorType deleteItem(int );

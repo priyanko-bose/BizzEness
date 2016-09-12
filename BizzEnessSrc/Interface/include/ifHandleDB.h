@@ -9,6 +9,7 @@ errorType deinitializeDBManager();
 errorType readRecords();
 errorType saveRecordsInDB();
 errorType saveTableRecords(tableType );
+errorType updateRecordInDB(tableType , unsigned int , matrow *);
 errorType saveRecordInDB(tableType, unsigned int, matrow *);
 errorType delFromDataBase(tableType , unsigned int );
 

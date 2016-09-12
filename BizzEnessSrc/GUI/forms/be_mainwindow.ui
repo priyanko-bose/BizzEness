@@ -325,7 +325,7 @@ Table Data</string>
        <item>
         <widget class="QTabWidget" name="tablesTabWidget">
          <property name="currentIndex">
-          <number>3</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="sumTab">
           <attribute name="title">
@@ -528,149 +528,6 @@ Table Data</string>
               <attribute name="horizontalHeaderMinimumSectionSize">
                <number>27</number>
               </attribute>
-              <column>
-               <property name="text">
-                <string>Product id</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Date</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Batch No</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>ProductName</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Company</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Mfg date</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Expiry Date</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Box</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Items</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Total Item</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Cost/Box</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Cost/pcs.</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Pcs/Box</string>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-              </column>
              </widget>
             </item>
            </layout>
@@ -1704,6 +1561,12 @@ Table Data</string>
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

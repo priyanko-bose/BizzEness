@@ -41,7 +41,8 @@ class BE_CashflowManager
 public:
     BE_CashflowManager();
     ~BE_CashflowManager();
-    errorType updateItem(int , int , string );
+    errorType setItem(int , int , string );
+    errorType updateItem(unsigned int , int , string, int );
     errorType addNewItem(int );
     errorType saveItems();
     errorType deleteItem(int );
