@@ -5,6 +5,7 @@
 #include "Interface/include/ifHandleBM.h"
 #include "GUI/include/be_mainwindow.h"
 #include "GUI/include/be_guiutils.h"
+#include "common/include/utils.h"
 #include "BusinessManager/include/beBusinessManager.h"
 #include "BusinessManager/include/bePurchaseManager.h"
 #include "BusinessManager/include/beStockManager.h"
@@ -300,6 +301,51 @@ errorType populatePurWindowData(unsigned int *id, int flds , string data)
     return errorCode;
 }
 
+errorType getPurchaseProds(QTableWidget *purTable, int row)
+{
+    matrix items;
+    /* This purtable ID comprises of has(purchase no + date + bill no) */
+    unsigned int purtableid = purTable->item(row, PUR_ID)->text().toUInt();
+    BE_PurchaseManager *mgr = BE_BusinessManager::getInstance()->getPurchaseManager();
+    int noOfItems = 0;
+    int err = mgr->getProductList(&items, purtableid, &noOfItems);
+    if(!err && noOfItems){
+        QTableWidget *table = BE_MainWindow::getBeMainWindow()->getPurchaseProdTable();
+        int rowCount =  table->rowCount();
+        for(int ro=0; ro < rowCount; ro++)
+            table->removeRow(0);
+        for(int ro = 0; ro < noOfItems; ro++)
+        {
+            table->insertRow(ro);
+            table->setColumnCount(table_ui_no_detail_fields[TABLE_PURCHASE]);
+            for(int co = 0; co < table->columnCount(); co++ ){
+                QTableWidgetItem *item = new QTableWidgetItem();
+                table->setItem(ro,co,item);
+            }
+            matrow *matr = &items.at(ro);
+            table->item(ro,0)->setText(QString::fromStdString(matr->at(PUR_ID))); //Prodname
+            table->item(ro,0)->setFlags(table->item(ro,0)->flags() & ~Qt::ItemIsEditable);
+
+            table->item(ro,1)->setText(QString::fromStdString(matr->at(PUR_PROD))); //Prodname
+            table->item(ro,1)->setFlags(table->item(ro,1)->flags() & ~Qt::ItemIsEditable);
+
+            table->item(ro,2)->setText(QString::fromStdString(matr->at(PUR_BATCH))); //Batch No.
+            table->item(ro,2)->setFlags(table->item(ro,0)->flags() & ~Qt::ItemIsEditable);
+
+            table->item(ro,3)->setText(QString::fromStdString(matr->at(PUR_BOX))); //Box
+            table->item(ro,4)->setText(QString::fromStdString(matr->at(PUR_ITEMS))); //Pieces
+            for (int col = 0; col < table->columnCount(); col++)
+            {
+                if(table->item(ro,col)->text() != table->item(ro,col)->toolTip())
+                    table->item(ro,col)->setToolTip(table->item(ro,col)->text());
+            }
+            matr->clear();
+        }
+    }
+    items.clear();
+    return ERR_NONE;
+}
+
 /*
  * Interface function to populate data read from database into table widgets
  */
@@ -330,18 +376,20 @@ errorType populateSavedData()
         for(map<unsigned int,stockData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
         {
             stockTable->insertRow(row);
-            for(int col=PROD_ID; col < PROD_END; col++)
+            for(int colit=0; colit < stockTable->columnCount(); colit++)
             {
-                if(!stockTable->item(row,col))
+                if(!stockTable->item(row,colit))
                 {
+                    stock_table_flds col = (stock_table_flds)w->getMappedId(TABLE_STOCK,
+                                               stockTable->horizontalHeaderItem(colit)->text().trimmed());
                     QTableWidgetItem *item = new QTableWidgetItem();
                     char data[256] = {'\0',};
                     strcpy(data, stockMgr->getElement(it->second, col));
                     item->setText(data);
                     item->setToolTip(data);
-                    if(!isAdmin || col == PROD_ID)
+                    if(!isAdmin || col == PROD_ID || col == PROD_NAME || col == PROD_BATCH)
                             item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-                    stockTable->setItem(row,col,item);
+                    stockTable->setItem(row,colit,item);
                 }
             }
         }
@@ -358,35 +406,45 @@ errorType populateSavedData()
         int rowCount = purMgr->totItems;
         int row = 0;
         vector<unsigned int> list;
-        for(map<unsigned int,purchaseData_t>::iterator it=table.begin(); it!=table.end() && row < rowCount; ++it, row++)
+        for(map<unsigned int,purchaseData_t>::iterator it=table.begin(); it!=table.end(); ++it)
         {
             QString hashText(purMgr->getElement(it->second, PUR_NO));
             hashText = hashText + purMgr->getElement(it->second, PUR_DATE) +
                                     purMgr->getElement(it->second, PUR_BILLNO);
-            unsigned int hashValue = hashCode(hashText);
+            unsigned int hashValue = hashCode(hashText.toStdString());
             if(!list.empty() && (std::find(list.begin(), list.end(), hashValue) != list.end()))
                 continue;
             else
                     list.push_back(hashValue);
 
             purchaseTable->insertRow(row);
-            for(int col=PUR_ID; col <= PUR_DUE; col++)
+            for(int colit=0; colit < purchaseTable->columnCount(); colit++)
             {
-                if(!purchaseTable->item(row,col))
+                if(!purchaseTable->item(row,colit))
                 {
+                    pur_table_flds col = (pur_table_flds)w->getMappedId(TABLE_PURCHASE,
+                                               purchaseTable->horizontalHeaderItem(colit)->text().trimmed());
                     QTableWidgetItem *item = new QTableWidgetItem();
                     char data[256] = {'\0',};
-                    if(col == PUR_TOTCOST)
-                        strcpy(data,purMgr->getElement(it->second, PUR_GRANDTOTAL));
+//                    if(col == PUR_TOTCOST)
+//                        strcpy(data,purMgr->getElement(it->second, PUR_GRANDTOTAL));
+                    if(col == PUR_ID)
+                        strcpy(data,uintToString(hashValue).c_str());
                     else
                         strcpy(data,purMgr->getElement(it->second, col));
                     item->setText(data);
                     item->setToolTip(data);
-                    if(!isAdmin || col == PUR_ID)
+                    if(!isAdmin || col == PUR_ID || col == PUR_BILLNO ||
+                            col == PUR_NO || col == PUR_DATE)
                             item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-                    purchaseTable->setItem(row,col,item);
+                    purchaseTable->setItem(row,colit,item);
                 }
             }
+            row++;
+        }
+        if(purchaseTable->rowCount() > 0){
+            purchaseTable->setCurrentCell(0,0);
+            emit purchaseTable->cellClicked(0,0);
         }
         fout <<"info:ifHandleDB.cpp:populateSavedData:purchase data populated "<<rowCount <<"items"<<endl;
     }

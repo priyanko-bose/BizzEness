@@ -185,6 +185,7 @@ errorType BE_PurchaseManager::setItem(unsigned int key, int itemno, string val)
  */
 errorType BE_PurchaseManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
 {
+    (void)updateQ;
     return setItem(key,itemno, val);
 }
 
@@ -500,4 +501,26 @@ errorType BE_PurchaseManager::getItemText(int searchFld, string searchFldText, i
         }
     }
     return ERR_NONE;
+}
+
+/* This purtable ID comprises of has(purchase no + date + bill no) */
+errorType BE_PurchaseManager::getProductList(matrix *matr, unsigned int purTableId, int *noOfItems)
+{
+    map <unsigned int, purchaseData_t> & mymap = this->getPurchaseTable();
+    int err = ERR_NONE;
+    if(!mymap.empty())
+    {
+        for (map<unsigned int,purchaseData_t>::iterator it=mymap.begin(); it!=mymap.end(); ++it){
+            string strid = it->second.purno + it->second.date + it->second.billno;
+            if((unsigned int )purTableId == hashCode(strid)){
+                matrow *onerec = new matrow();
+                err |= getRecord(hashCode(strid + it->second.productName), onerec);
+                matr->push_back(*onerec);
+                (*noOfItems)++;
+            }
+            else
+                continue;
+        }
+    }
+    return (errorType)err;
 }

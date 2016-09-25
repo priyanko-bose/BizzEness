@@ -168,13 +168,16 @@ const char * const table_name[9] = {
     "SalesReturn",
 } ;
 
+
 const char * const table_fields[9][24] = {
     {""},
     {"SummaryId"} ,
+    /* Purchase table key = purNo + date + billNo + prodname */
     {"PurchaseId","PurchaseNo","Date","BillNo","Supplier","TotalCost", "Paid","Due","ProductName","BatchNo","Box","Pieces","SupplierAddress","Contact","ContactNo", "Remarks","PcsPerBox","CostPerBox", "CostPerPcs","Tax","Expenses","CashPaid","ChequePaid", "GrandTotal"},
     {"SalesId"},
     {"CashFlowId"},
     {"ProfitLossId"},
+    /* Stock table key = prodName + batchNo */
     {"StockId", "LastDate", "BatchNo", "ProductName", "Company", "MfgDate", "ExpDate", "Box", "Pieces", "TotalPieces", "CostPerBox", "CostPerPcs", "PcsPerBox" },
     {"OrdersId" },
     {"SalesReturnId"},
@@ -207,10 +210,12 @@ const static int table_ui_no_fields[9] = {
 const char * const table_ui_fields[9][13] = {
     {""},
     {""} ,
+    /* Purchase table key = purNo + date + billNo */
     {"purid","PurchaseNo","Date","Bill No.","Supplier","Total Cost", "Paid","Due","", "", "", "", ""},
     {""},
     {""},
     {""},
+    /* Stock table key = ProductName + Batch No. */
     {"stockid", "LastDate", "Batch No.", "ProductName", "Company", "MfgDate", "ExpDate", "Box", "Items", "TotalItems", "Cost/Box", "Cost/Pcs", "Pcs/Box" },
     {"" },
     {""},
@@ -219,7 +224,7 @@ const char * const table_ui_fields[9][13] = {
 const char * const table_ui_detail_fields [9][5] = {
     {""},
     {""} ,
-    {"ProductName","Batch No.","Box","Pieces"},
+    {"purdid","ProductName","Batch No.","Box","Pieces"},
     {""},
     {""},
     {""},
@@ -231,7 +236,7 @@ const char * const table_ui_detail_fields [9][5] = {
 const static int table_ui_no_detail_fields[9] = {
     0,
     0 ,
-    4,
+    5,
     0,
     0,
     0,

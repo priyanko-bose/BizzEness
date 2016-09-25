@@ -1,5 +1,6 @@
 #include <string>
 #include <sstream>
+#define HASHMASK 0x00FF
 
 std::string uintStr = "";
 std::string intStr = "";
@@ -26,4 +27,16 @@ std::string doubleToString(double d)
     doubleStr = ss.str();
 
     return doubleStr;
+}
+
+unsigned int  hashCode(std::string text){
+    int i;
+    unsigned int h;
+    int len = text.length();
+    h = 1315423911;
+    for (i = 0; i < len;  i++) {
+           h ^= ((h << 5) + (text[i]) + (h >> 2));
+    }
+    h &= HASHMASK;
+    return h;
 }

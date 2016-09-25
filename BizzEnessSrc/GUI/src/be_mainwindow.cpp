@@ -3,6 +3,7 @@
 #include "GUI/include/be_mainwindow.h"
 #include "GUI/include/be_purwindow.h"
 #include "common/include/common.h"
+#include "common/include/utils.h"
 #include "Interface/include/ifHandleBM.h"
 #include "Interface/include/ifHandleDB.h"
 #include "Interface/include/ifHandleGUI.h"
@@ -39,6 +40,9 @@ BE_MainWindow::BE_MainWindow(QWidget *parent) :
     isSalesTableEdited = false;
     isPLTableEdited = false;
     isCashFlowTableEdited = false;
+
+    initStockColumnNameValueMap();
+    initPurColumnNameValueMap();
     //Set up the main window
     ui->setupUi(this);
 
@@ -85,6 +89,7 @@ BE_MainWindow::BE_MainWindow(QWidget *parent) :
     QObject::connect(ui->importAllDataPushButton, &QPushButton::clicked, this, &BE_MainWindow::on_importAllDataPushButton_clicked);
     QObject::connect(ui->printTablePushButton, &QPushButton::clicked, this, &BE_MainWindow::on_printTablePushButton_clicked);
     QObject::connect(ui->previewTablePushButton, &QPushButton::clicked, this, &BE_MainWindow::on_previewPushButton_clicked);
+    QObject::connect(ui->purchaseTableWidget, &QTableWidget::cellClicked, this, &BE_MainWindow::on_purTableCell_clicked);
     if(!QObject::connect(this, SIGNAL(signalUpdateStockTable(matrow *)),this, SLOT(on_signalUpdateStockTable(matrow *))))
       qDebug() << "CHECKED_CONNECT failed";
 }
@@ -136,6 +141,14 @@ QTableWidget* BE_MainWindow::getStockTable()
 QTableWidget* BE_MainWindow::getPurchaseTable()
 {
     return ui->purchaseTableWidget;
+}
+
+/*
+ * Returns the Purchase Detail Table GUI
+ */
+QTableWidget* BE_MainWindow::getPurchaseProdTable()
+{
+    return ui->purDetailTableWidget;
 }
 
 /*
@@ -203,7 +216,7 @@ void BE_MainWindow::saveTableItems(tableType tbletype, QTableWidget *table)
 {
     int rowCount = table->rowCount();
     int colCount = table->columnCount();
-    for(int row=0; row< rowCount; row++)
+    for(int row=0; row < rowCount; row++)
     {
         unsigned int newkey = 0;
         unsigned int oldKey = 0;
@@ -212,18 +225,18 @@ void BE_MainWindow::saveTableItems(tableType tbletype, QTableWidget *table)
         else
             oldKey = table->item(row, 0)->text().toUInt();
         if(tbletype == TABLE_PURCHASE){
-            QString prodName, batchNo, billNo, date;
-            if(table->item(row, PUR_PROD))
-                 prodName = table->item(row, PUR_PROD)->text().trimmed();
-            if(table->item(row, PUR_BATCH))
-                batchNo = table->item(row, PUR_BATCH)->text().trimmed();
-            if(table->item(row, PUR_BILLNO))
-                billNo = table->item(row, PUR_BILLNO)->text().trimmed();
-            if(table->item(row, PUR_DATE))
-                date = table->item(row, PUR_DATE)->text().trimmed();
-            if(prodName.isEmpty() || batchNo.isEmpty() || billNo.isEmpty())
+            QString /*prodName,*/ purno, billNo, date;
+            //if(table->item(row, PUR_PROD))
+             //    prodName = table->item(row, PUR_PROD)->text().trimmed();
+            if(table->item(row, getTableColIdByMappedId(TABLE_PURCHASE, PUR_NO)))
+                purno = table->item(row, getTableColIdByMappedId(TABLE_PURCHASE, PUR_NO))->text().trimmed();
+            if(table->item(row, getTableColIdByMappedId(TABLE_PURCHASE, PUR_BILLNO)))
+                billNo = table->item(row, getTableColIdByMappedId(TABLE_PURCHASE, PUR_BILLNO))->text().trimmed();
+            if(table->item(row, getTableColIdByMappedId(TABLE_PURCHASE, PUR_DATE)))
+                date = table->item(row, getTableColIdByMappedId(TABLE_PURCHASE, PUR_DATE))->text().trimmed();
+            if(/*prodName.isEmpty() || */billNo.isEmpty() || purno.isEmpty() || date.isEmpty())
                 return;
-            newkey = hashCode(prodName + batchNo + billNo + date);
+            newkey = hashCode((purno +date + billNo /*+ prodName*/).toStdString());
         }
         else if(tbletype == TABLE_STOCK){
             QString prodName, batchNo;
@@ -233,7 +246,7 @@ void BE_MainWindow::saveTableItems(tableType tbletype, QTableWidget *table)
                 batchNo = table->item(row, PROD_BATCH)->text().trimmed();
             if(prodName.isEmpty() || batchNo.isEmpty())
                 return;
-            newkey = hashCode(prodName + batchNo);
+            newkey = hashCode((prodName + batchNo).toStdString());
         }
         else
             newkey = oldKey = 0;
@@ -242,11 +255,16 @@ void BE_MainWindow::saveTableItems(tableType tbletype, QTableWidget *table)
             updateItemKeyToBusinessManager(tbletype, oldKey, newkey);
             table->item(row, 0)->setText(QString::number(newkey));
         }
-        for (int col = 0; col<= colCount; col++)
+        for (int col = 0; col < colCount; col++)
         {
             if(table->item(row,col))
                 table->item(row,col)->setToolTip(table->item(row,col)->text());
         }
+    }
+    if(tbletype == TABLE_PURCHASE && rowCount > 0)
+    {
+        table->setCurrentCell(0,0);
+        emit table->cellClicked(0,0);
     }
 }
 
@@ -335,6 +353,104 @@ int BE_MainWindow::setCurrentTab(QString & tableName)
     return curTabId;
 }
 
+/*
+ * Get the column ID with respect to the column name
+ */
+int BE_MainWindow :: getMappedId(tableType tbl, QString colName){
+
+    switch(tbl)
+    {
+        case TABLE_STOCK:
+            if(stockColumnNameValueMap.contains(colName))
+                return (stockColumnNameValueMap.value(colName));
+            else
+                return PROD_END;
+        case TABLE_PURCHASE:
+            if(purColumnNameValueMap.contains(colName))
+                return (purColumnNameValueMap.value(colName));
+            else
+                return PUR_END;
+        default:
+            return -1;
+    }
+}
+
+int BE_MainWindow::getTableColIdByMappedId(tableType tbl, int id){
+    QString colName = "";
+    QTableWidget *table = 0;
+    switch(tbl)
+    {
+        case TABLE_STOCK:
+            if(stockColumnNameValueMap.values().contains((stock_table_flds)id))
+                colName = stockColumnNameValueMap.key((stock_table_flds)id,"");
+            else
+                return PROD_END;
+            if(!colName.isEmpty())
+            {
+                table = this->getStockTable();
+            }
+            break;
+        case TABLE_PURCHASE:
+            if(purColumnNameValueMap.values().contains((pur_table_flds)id))
+                colName = purColumnNameValueMap.key((pur_table_flds)id,"");
+            else
+                return PUR_END;
+            if(!colName.isEmpty())
+            {
+                table = this->getPurchaseTable();
+            }
+            break;
+
+        default:
+            return -1;
+    }
+    for(int j=0; table && j < table->columnCount(); j++ )
+    {
+        if(table->horizontalHeaderItem(j)->text().trimmed() == colName)
+        {
+            return j;
+        }
+        else
+            continue;
+    }
+    return -1;
+}
+
+/*------------------Private Functions-----------------------*/
+/*
+ * Insert the column ID with respect to the column name
+ */
+void BE_MainWindow :: initPurColumnNameValueMap()
+{
+    purColumnNameValueMap.insert("purid", PUR_ID);
+    purColumnNameValueMap.insert("PurchaseNo", PUR_NO);
+    purColumnNameValueMap.insert("Date", PUR_DATE);
+    purColumnNameValueMap.insert("Bill No.", PUR_BILLNO);
+    purColumnNameValueMap.insert("Supplier", PUR_SUPP);
+    purColumnNameValueMap.insert("Total Cost", PUR_GRANDTOTAL);
+    purColumnNameValueMap.insert("Paid", PUR_PAID);
+    purColumnNameValueMap.insert("Due", PUR_DUE);
+}
+/*------------------Private Functions-----------------------*/
+/*
+ * Insert the column ID with respect to the column name
+ */
+void BE_MainWindow :: initStockColumnNameValueMap()
+{
+    stockColumnNameValueMap.insert("stockid", PROD_ID);
+    stockColumnNameValueMap.insert("LastDate", PROD_DATE);
+    stockColumnNameValueMap.insert("Batch No.", PROD_BATCH);
+    stockColumnNameValueMap.insert("ProductName", PROD_NAME);
+    stockColumnNameValueMap.insert("Company", PROD_COMP);
+    stockColumnNameValueMap.insert("MfgDate", PROD_MFG);
+    stockColumnNameValueMap.insert("ExpDate", PROD_EXP);
+    stockColumnNameValueMap.insert("Box", PROD_NOB);
+    stockColumnNameValueMap.insert("Items", PROD_NOI);
+    stockColumnNameValueMap.insert("TotalItems", PROD_NOTI);
+    stockColumnNameValueMap.insert("Cost/Box", PROD_CPB);
+    stockColumnNameValueMap.insert("Cost/Pcs", PROD_CPP);
+    stockColumnNameValueMap.insert("Pcs/Box", PROD_PPB);
+}
 /*------------------SLOTS Definitions-----------------------*/
 
 /*
@@ -369,7 +485,7 @@ void BE_MainWindow::on_addPushButton_clicked()
     if(!isAdmin)
         return;
     QDateTime now = QDateTime::currentDateTimeUtc();
-    unsigned int prod = hashCode(QString::number(now.toTime_t()));
+    unsigned int prod = hashCode(QString(now.toTime_t()).toStdString());
     int row = curTable->rowCount();
     curTable->insertRow(row);
     int id = 0;
@@ -482,6 +598,7 @@ void BE_MainWindow:: on_cancelPushButton_clicked()
     }
     if(isPurchaseTableEdited == true){
         cancelTableItems(ui->purchaseTableWidget);
+        cancelTableItems(ui->purDetailTableWidget);
         isPurchaseTableEdited = false;
     }
     if(isSalesTableEdited == true){
@@ -584,6 +701,21 @@ End:
     ui->cancelPushButton->setEnabled(false);
 }
 
+void BE_MainWindow::on_purTableCell_clicked(int row, int col)
+{
+    (void)col;
+    QObject::disconnect(ui->purDetailTableWidget,&QTableWidget::cellChanged, this, &BE_MainWindow::on_purDetailTableWidget_cellChanged);
+    (void)getPurchaseProds(ui->purchaseTableWidget, row);
+    QObject::connect(ui->purDetailTableWidget,&QTableWidget::cellChanged, this, &BE_MainWindow::on_purDetailTableWidget_cellChanged);
+    if(!isPurchaseTableEdited)
+    {
+        isPurchaseTableEdited = false;
+        ui->savePushButton->setEnabled(false);
+        ui->cancelPushButton->setEnabled(false);
+    }
+
+}
+
 void BE_MainWindow::print(QPrinter *printer)
 {
     QPainter painter(printer);
@@ -662,18 +794,44 @@ void BE_MainWindow::on_stockTableWidget_cellChanged(int row, int col)
 {
     if(!isAdmin)
         return;
-    isStockTableEdited = true;
     int id = 0;
     QTableWidget *table = ui->stockTableWidget;
     if(row >= 0 && col > 0)
     {
         if(table->item(row,col) && table->item(row,id))
-            setItemToBusinessManager(TABLE_STOCK, table->item(row,id)->text().toUInt(),
-                               col, table->item(row,col)->text().toStdString());
+            setItemToBusinessManager(TABLE_STOCK,
+                         table->item(row,getTableColIdByMappedId(TABLE_STOCK, PROD_ID))->text().toUInt(),
+                               getMappedId(TABLE_STOCK, table->horizontalHeaderItem(col)->text().trimmed()),
+                                     table->item(row,col)->text().toStdString());
     }
+    isStockTableEdited = true;
     ui->savePushButton->setEnabled(true);
     ui->cancelPushButton->setEnabled(true);
 }
+void BE_MainWindow::on_purDetailTableWidget_cellChanged(int row, int col)
+{
+    if(!isAdmin)
+        return;
+    int id = 0;
+    QTableWidget *table = ui->purDetailTableWidget;
+    if(row >= 0 && col > 0)
+    {
+        if(table->item(row,col) && table->item(row,id)){
+            pur_table_flds flds = PUR_END;
+            if(col == 3)
+                flds = PUR_BOX;
+            else if(col == 4)
+                flds = PUR_ITEMS;
+            if(flds != PUR_END)
+                setItemToBusinessManager(TABLE_PURCHASE, table->item(row,0)->text().toUInt(),
+                                         flds, table->item(row,col)->text().toStdString());
+        }
+    }
+    isPurchaseTableEdited = true;
+    ui->savePushButton->setEnabled(true);
+    ui->cancelPushButton->setEnabled(true);
+}
+
 void BE_MainWindow::on_plTableWidget_cellChanged(int row, int col)
 {
     if(!isAdmin)
@@ -694,13 +852,21 @@ void BE_MainWindow::on_purchaseTableWidget_cellChanged(int row, int col)
 {
     if(!isAdmin)
         return;
-    int id = 0;
     QTableWidget *table = ui->purchaseTableWidget;
-    if(row >= 0 && col > 0)
+    QTableWidget *prodTable = ui->purDetailTableWidget;
+    int prodRows = prodTable->rowCount();
+    if(row >= 0 && col > 0 &&  prodRows > 0)
     {
-        if(table->item(row,col) && table->item(row,id))
-            setItemToBusinessManager(TABLE_PURCHASE, table->item(row,id)->text().toUInt(),
-                               col, table->item(row,col)->text().toStdString());
+        pur_table_flds purCol = (pur_table_flds)getMappedId(TABLE_PURCHASE,table->horizontalHeaderItem(col)->text().trimmed());
+        for(int it=0; it < prodRows ; it++)
+        {
+            if(prodTable->item(it,0)){
+                unsigned int  key = prodTable->item(it,0)->text().trimmed().toUInt();
+                setItemToBusinessManager(TABLE_PURCHASE, key, purCol, table->item(row,col)->text().toStdString());
+            }
+            else
+                continue;
+        }
     }
     isPurchaseTableEdited = true;
     ui->savePushButton->setEnabled(true);
@@ -742,13 +908,16 @@ void BE_MainWindow::on_signalUpdateStockTable(matrow *record)
     if(!found){
         int rows = stockTable->rowCount();
         stockTable->insertRow(rows);
-        for(int col = PROD_ID; col < PROD_END; col++)
+        for(int colit = 0; colit < stockTable -> columnCount(); colit++)
         {
-            if(!stockTable->item(rows,col)){
+            int col = getMappedId(TABLE_STOCK, stockTable->horizontalHeaderItem(colit)->text().trimmed());
+            if(!stockTable->item(rows,colit)){
                 QTableWidgetItem *item = new QTableWidgetItem();
-                stockTable->setItem(rows, col, item);
+                if(!isAdmin || col == PROD_ID || col == PROD_NAME || col == PROD_BATCH)
+                     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+                stockTable->setItem(rows, colit, item);
             }
-            stockTable->item(rows,col)->setText(QString::fromStdString(record->at(col)));
+            stockTable->item(rows,colit)->setText(QString::fromStdString(record->at(col)));
         }
     }
     isStockTableEdited = false;

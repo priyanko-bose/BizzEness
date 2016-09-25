@@ -120,6 +120,7 @@ errorType BE_SalesManager::setItem(int key, int itemno, string val)
  */
 errorType BE_SalesManager::updateItem(unsigned int key, int itemno, string val, int updateQ)
 {
+    (void)updateQ;
     return setItem(key,itemno, val);
 }
 

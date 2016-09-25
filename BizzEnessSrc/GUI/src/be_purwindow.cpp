@@ -5,6 +5,7 @@
 #include "Interface/include/ifHandleBM.h"
 #include "Interface/include/ifHandleDB.h"
 #include "GUI/include/be_guiutils.h"
+#include "common/include/utils.h"
 #include <QMessageBox>
 #include <QPrintPreviewDialog>
 /*
@@ -187,17 +188,19 @@ void BE_PurWindow::on_purDelPushButton_clicked()
         return;
    int row = memoUi->purTableWidget->currentRow();
    QListWidget *list = memoUi->prodListWidget;
-   QString prodname = "";
-   if(memoUi->purTableWidget->item(row,0))
-       prodname = memoUi->purTableWidget->item(row,0)->text();//rectify
+   QString prodname = "", batchno = "";
+   if(memoUi->purTableWidget->item(row,getColID(PURUI_NAME)))
+       prodname = memoUi->purTableWidget->item(row,getColID(PURUI_NAME))->text();
+   if(memoUi->purTableWidget->item(row,getColID(PURUI_BATCH)))
+       batchno = memoUi->purTableWidget->item(row,getColID(PURUI_BATCH))->text();
    memoUi->purTableWidget->removeRow(row);
    int totaItems = list->count();
-   if((totaItems) && (prodname == ""))
+   if((totaItems) && (!(prodname == "")))
    {
        for(int row=0; row < totaItems; row++)
        {
            QListWidgetItem *item = list->item(row);
-           if(item->text() == prodname){
+           if(item->text() == ( prodname + "(" + batchno + ")")){
                item->setHidden(false);
                item->setCheckState( Qt::Unchecked );
            }
@@ -237,7 +240,7 @@ void BE_PurWindow::on_productListButtonBox_accepted()
                 memoUi->purTableWidget->setItem(count,getColID(PURUI_BATCH),tItem);
 
                 matrow *record = '\0';
-                prepareRecord(TABLE_STOCK, hashCode(prodname + batchno), &record);
+                prepareRecord(TABLE_STOCK, hashCode((prodname + batchno).toStdString()), &record);
 
                 tItem = new QTableWidgetItem();
                 tItem->setText(QString::fromStdString(record->at(PROD_CPB)));
@@ -366,7 +369,8 @@ void BE_PurWindow::on_totalItemsTextEdited_clicked()
  */
 void BE_PurWindow::on_purMemoUIButtonBox_accepted()
 {
-    QTableWidget *curTable = BE_MainWindow::getBeMainWindow()->getPurchaseTable();
+    BE_MainWindow *w = BE_MainWindow::getBeMainWindow();
+    QTableWidget *curTable = w->getPurchaseTable();
     int rowCount = memoUi->purTableWidget->rowCount();
     QString billNo = memoUi->billNoLineEdit->text().trimmed(); //get the bill no
     QString date = memoUi->dateEdit->text().trimmed();   //get the date
@@ -387,10 +391,10 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
             batchNo = itemB->text().trimmed(); //get product batch no.
 
             /* Update business manager -- start*/
-            uniqueIds[TABLE_PURCHASE] = hashCode(prodName + purNo + billNo + date);
+            uniqueIds[TABLE_PURCHASE] = hashCode((purNo + date + billNo + prodName).toStdString());
             addItemToBusinessManager(TABLE_PURCHASE,uniqueIds[TABLE_PURCHASE]);
 
-            uniqueIds[TABLE_STOCK] = hashCode(prodName + batchNo);
+            uniqueIds[TABLE_STOCK] = hashCode((prodName + batchNo).toStdString());
             int stockIdStatus = addItemToBusinessManager(TABLE_STOCK, uniqueIds[TABLE_STOCK]);
 
             for(int col = PURUI_NAME; col <= PURUI_TAX; col++)
@@ -466,50 +470,51 @@ void BE_PurWindow::on_purMemoUIButtonBox_accepted()
     }
     /* Update UI -- start*/
     QString hashText = purNo + date + billNo;
-    unsigned int hashValue = hashCode(hashText);
+    unsigned int hashValue = hashCode(hashText.toStdString());
     int row = curTable->rowCount();
     curTable->insertRow(row);
     for (int col = 0; col < curTable->columnCount(); col++)
     {
         QTableWidgetItem *data = new QTableWidgetItem();
-        if(!isAdmin || col == PUR_ID)
+        if(!isAdmin || col == PUR_BILLNO ||
+                col == PUR_NO || col == PUR_DATE)
              data->setFlags(data->flags() & ~Qt::ItemIsEditable);
-        if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][0])
+        if(w->getMappedId(TABLE_PURCHASE, curTable->horizontalHeaderItem(col)->text().trimmed()) == PUR_ID)
         {
             data->setText(QString::number(hashValue));
             curTable->setItem(row,col, data);
         }
-        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][1])
+        else if(w->getMappedId(TABLE_PURCHASE, curTable->horizontalHeaderItem(col)->text().trimmed()) == PUR_NO)
         {
             data->setText(purNo);
             curTable->setItem(row,col, data);
         }
-        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][2])
+        else if(w->getMappedId(TABLE_PURCHASE, curTable->horizontalHeaderItem(col)->text().trimmed()) == PUR_DATE)
         {
             data->setText(memoUi->dateEdit->text().trimmed());
             curTable->setItem(row,col, data);
         }
-        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][3])
+        else if(w->getMappedId(TABLE_PURCHASE, curTable->horizontalHeaderItem(col)->text().trimmed()) == PUR_BILLNO)
         {
             data->setText(memoUi->billNoLineEdit->text().trimmed());
             curTable->setItem(row,col, data);
         }
-        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][4])
+        else if(w->getMappedId(TABLE_PURCHASE, curTable->horizontalHeaderItem(col)->text().trimmed()) == PUR_SUPP)
         {
             data->setText(memoUi->companyComboBox->lineEdit()->text().trimmed());
             curTable->setItem(row,col, data);
         }
-        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][5])
+        else if(w->getMappedId(TABLE_PURCHASE, curTable->horizontalHeaderItem(col)->text().trimmed()) == PUR_GRANDTOTAL)
         {
             data->setText(memoUi->grandTotalLineEdit->text().trimmed());
             curTable->setItem(row,col, data);
         }
-        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][6])
+        else if(w->getMappedId(TABLE_PURCHASE, curTable->horizontalHeaderItem(col)->text().trimmed()) == PUR_PAID)
         {
             data->setText(memoUi->totalPaidLineEdit->text().trimmed());
             curTable->setItem(row,col, data);
         }
-        else if(curTable->horizontalHeaderItem(col)->text().trimmed() == table_ui_fields[TABLE_PURCHASE][7])
+        else if(w->getMappedId(TABLE_PURCHASE, curTable->horizontalHeaderItem(col)->text().trimmed()) == PUR_DUE)
         {
             data->setText(memoUi->totalDueLineEdit->text().trimmed());
             curTable->setItem(row,col, data);
@@ -647,15 +652,15 @@ void BE_PurWindow::print(QPrinter *printer)
     int left = rows;
     int start = 0;
     int end = 0;
-
-    rows = row_per_page;
+    int pur_row_per_page = row_per_page/2;
+    rows = pur_row_per_page;
     while(left > 0 ){
          //Logic to select the portion of Table Widget
-        start = count * row_per_page;
-        end = start + (left > row_per_page ? row_per_page :left);
+        start = count * pur_row_per_page;
+        end = start + (left > pur_row_per_page ? pur_row_per_page :left);
         count++;
-        if(left > row_per_page){
-            left = left - row_per_page;
+        if(left > pur_row_per_page){
+            left = left - pur_row_per_page;
         }
         else{
             left = 0;
