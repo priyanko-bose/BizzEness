@@ -38,11 +38,16 @@ public:
     QTableWidget* getCashFlowTable();
     QTableWidget* getPLTable();
     QTableWidget* getSummaryTable();
+    QTableWidget* getPurchaseProdTable();
 
     void initializeSignalsSlots();
     void populatePurchaseData(BE_PurWindow *, int);
     int setCurrentTab(QString & );
     void diableSaveCancel();
+    int getMappedId(tableType , QString );
+    void initStockColumnNameValueMap();
+    void initPurColumnNameValueMap();
+    int getTableColIdByMappedId(tableType , int );
 
 public slots:
     void on_signalUpdateStockTable(matrow *);
@@ -52,6 +57,8 @@ signals:
     void signalUpdateStockTable(matrow *);
 
 private:
+    QMap <QString, pur_table_flds> purColumnNameValueMap;
+    QMap <QString, stock_table_flds> stockColumnNameValueMap;
     BE_MainWindow(QWidget *parent = 0);
     static BE_MainWindow *beMainWindowObj;
     Ui::MainWindow *ui;
@@ -76,6 +83,8 @@ private:
     void on_importAllDataPushButton_clicked();
     void on_printTablePushButton_clicked();
     void on_previewPushButton_clicked();
+    void on_purTableCell_clicked(int,int);
+    void on_purDetailTableWidget_cellChanged(int,int);
 };
 
 #endif // BE_MAINWINDOW_H

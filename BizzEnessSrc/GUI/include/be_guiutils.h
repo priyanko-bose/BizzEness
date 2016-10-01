@@ -6,7 +6,6 @@
 #include <QTableWidget>
 #include <common/include/common.h>
 
-unsigned int  hashCode(QString text);
 void printHeader(QPainter *, QPrinter *, QString &);
 int drawDoubleLines(QPainter *painter, int , int , int , int );
 int printLine(QPainter *, QPoint , QString , QString , int );

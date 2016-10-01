@@ -89,14 +89,14 @@ enum purui_table_flds{
     PURUI_PCSPERBOX,
     PURUI_COSTOFBOX,
     PURUI_COSTOFPCS,
+    PURUI_TOTAL,
     PURUI_TAX,
+    //Common  part for all items in the same purchase bill
     PURUI_EXPNS,
-    PURUI_TOTALCOST,
     PURUI_CASHPAID,
     PURUI_CHEQPAID,
     PURUI_TOTALPAID,
-    PURUI_DUE,
-    //Common  part for all items in the same purchase bill
+    PURUI_TOTALDUE,
     PURUI_BILL,
     PURUI_PURNO,
     PURUI_DATE,
@@ -105,6 +105,8 @@ enum purui_table_flds{
     PURUI_CONTACT,
     PUTRUI_CONTACTNO,
     PURUI_REMARKS,
+    PURUI_TAXPER,
+    PURUI_GRANDTOTAL,
     PURUI_END
 };
 
@@ -113,15 +115,15 @@ enum pur_table_flds{
     PUR_NO,
     PUR_DATE ,
     PUR_BILLNO,
-    PUR_BATCH,
-    PUR_PROD = 5,
     PUR_SUPP ,
-    PUR_BOX ,
-    PUR_ITEMS ,
     PUR_TOTCOST ,
     PUR_PAID ,
-    PUR_DUE = 11,
+    PUR_DUE,
     //Other items
+    PUR_PROD,
+    PUR_BATCH,
+    PUR_BOX ,
+    PUR_ITEMS ,
     PUR_SUPPADDR,
     PUR_CONTACT,
     PUR_CONTACTNO,
@@ -133,6 +135,7 @@ enum pur_table_flds{
     PUR_EXPNS,
     PUR_CASHPAID,
     PUR_CHEQPAID,
+    PUR_GRANDTOTAL,
     PUR_END
 };
 
@@ -165,22 +168,25 @@ const char * const table_name[9] = {
     "SalesReturn",
 } ;
 
-const char * const table_fields[9][23] = {
+
+const char * const table_fields[9][24] = {
     {""},
     {"SummaryId"} ,
-    {"PurchaseId","PurchaseNo","Date","BillNo","BatchNo","ProductName","Supplier","Box","Pieces","TotalCost", "Paid","Due","SupplierAddress","Contact","ContactNo", "Remarks","PcsPerBox","CostPerBox", "CostPerPcs","Tax","Expenses","CashPaid","ChequePaid"},
+    /* Purchase table key = purNo + date + billNo + prodname */
+    {"PurchaseId","PurchaseNo","Date","BillNo","Supplier","TotalCost", "Paid","Due","ProductName","BatchNo","Box","Pieces","SupplierAddress","Contact","ContactNo", "Remarks","PcsPerBox","CostPerBox", "CostPerPcs","Tax","Expenses","CashPaid","ChequePaid", "GrandTotal"},
     {"SalesId"},
     {"CashFlowId"},
     {"ProfitLossId"},
+    /* Stock table key = prodName + batchNo */
     {"StockId", "LastDate", "BatchNo", "ProductName", "Company", "MfgDate", "ExpDate", "Box", "Pieces", "TotalPieces", "CostPerBox", "CostPerPcs", "PcsPerBox" },
     {"OrdersId" },
     {"SalesReturnId"},
 } ;
 
-const char * const table_fields_desc[9][23] = {
+const char * const table_fields_desc[9][24] = {
     {""},
     {""} ,
-    {"","10","16","10","10","32","32","8","10","16","16","16","50","25","16","50","8","16", "16","16","16","16","16"},
+    {"","10","16","10","32","16","16","16","32","10","8","10","50","25","16","50","8","16", "16","16","16","16","16","16"},
     {""},
     {""},
     {""},
@@ -189,18 +195,55 @@ const char * const table_fields_desc[9][23] = {
     {""},
 } ;
 
+const static int table_ui_no_fields[9] = {
+    0,
+    0 ,
+    8,
+    0,
+    0,
+    0,
+    13,
+    0,
+    0,
+} ;
+
 const char * const table_ui_fields[9][13] = {
     {""},
     {""} ,
-    {"purid","PurchaseNo","Date","Bill No.","Batch No.","ProductName","Supplier","Box","Pieces","Total Cost", "Paid","Due", ""},
+    /* Purchase table key = purNo + date + billNo */
+    {"purid","PurchaseNo","Date","Bill No.","Supplier","Total Cost", "Paid","Due","", "", "", "", ""},
     {""},
     {""},
     {""},
+    /* Stock table key = ProductName + Batch No. */
     {"stockid", "LastDate", "Batch No.", "ProductName", "Company", "MfgDate", "ExpDate", "Box", "Items", "TotalItems", "Cost/Box", "Cost/Pcs", "Pcs/Box" },
     {"" },
     {""},
 } ;
 
+const char * const table_ui_detail_fields [9][5] = {
+    {""},
+    {""} ,
+    {"purdid","ProductName","Batch No.","Box","Pieces"},
+    {""},
+    {""},
+    {""},
+    {""},
+    {"" },
+    {""},
+};
+
+const static int table_ui_no_detail_fields[9] = {
+    0,
+    0 ,
+    5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+} ;
 errorType openLogFile();
 void closeFile();
 #endif

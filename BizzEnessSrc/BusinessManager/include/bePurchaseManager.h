@@ -32,6 +32,7 @@ typedef struct {
     double expns;
     double cashpaid;
     double chqpaid;
+    double grandtotal;
 }purchaseData_t;
 
 class BE_PurchaseManager
@@ -54,6 +55,7 @@ public:
     map <unsigned int, purchaseData_t> & getPurchaseTable();
     const char * getElement(purchaseData_t &, int );
     errorType getItemText(int , string , int, string *);
+    errorType getProductList(matrix *, unsigned int, int *);
     int totItems;
  private:
     map <unsigned int, purchaseData_t> purchaseTable;

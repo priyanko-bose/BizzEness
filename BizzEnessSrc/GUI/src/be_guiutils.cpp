@@ -4,22 +4,12 @@
 #include <QRect>
 #include <QTableView>
 #include <QHeaderView>
+#include <QModelIndex>
+#include <QComboBox>
 #include <QDateTime>
+#include <QLineEdit>
 #include <QDebug>
 #include "GUI/include/be_guiutils.h"
-
-unsigned int  hashCode(QString text){
-    unsigned int hash = 0;
-    int strlen = text.length(), i;
-    QChar character;
-    if (strlen == 0)
-        return hash;
-    for (i = 0; i < strlen; i++) {
-        character = text.at(i);
-        hash = (31 * hash) + (character.toLatin1());
-    }
-    return hash;
-}
 
 QAbstractItemModel * getTableArea(QTableWidget *curTable,int startRow, int startCol,
                                      int endRow, int endCol){
@@ -29,7 +19,16 @@ QAbstractItemModel * getTableArea(QTableWidget *curTable,int startRow, int start
             if(ifrom == startRow)
                 model->setHeaderData(jfrom, Qt::Horizontal, curTable->horizontalHeaderItem(jfrom)->text());
             if(curTable->model()->index(ifrom, jfrom).isValid())
-                model->setData(model->index(ito, jfrom) ,curTable->model()->index(ifrom, jfrom).data().toString());
+            {
+                if(curTable->cellWidget(ifrom,jfrom) &&
+                        strcmp(curTable->cellWidget(ifrom,jfrom)->metaObject()->className(), "QComboBox") == 0)
+                {
+                    QComboBox *box = qobject_cast<QComboBox *>(curTable->cellWidget(ifrom,jfrom));
+                    model->setData(model->index(ito, jfrom) , box->lineEdit()->text());
+                }
+                else
+                    model->setData(model->index(ito, jfrom) ,curTable->model()->index(ifrom, jfrom).data().toString());
+            }
         }
     }
     return model;

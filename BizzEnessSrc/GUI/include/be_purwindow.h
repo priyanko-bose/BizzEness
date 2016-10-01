@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QMap>
 #include <QPrinter>
+#include <QTableWidgetItem>
 #include "common/include/common.h"
 
 namespace Ui {
@@ -37,9 +38,19 @@ private:
     void on_printPushButton_clicked();
     void on_purTableWidget_cellChanged(int, int);
 
+
 public slots:
     void print(QPrinter *printer);
     void on_currentIndexChanged_clicked(int);
+    void on_totalItemsTextEdited_clicked();
 };
+
+class BE_QTableWidgetItem : public QObject, public QTableWidgetItem
+{
+    Q_OBJECT
+public slots:
+    void on_taxComboBox_TextChanged(const QString &);
+};
+
 #endif // BE_PURWINDOW_H
 
